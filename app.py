@@ -593,16 +593,23 @@ def download_payslip_pdf(company_id: str, emp_id: str, month_year: str, current_
         headers={"Content-Disposition": f"inline; filename=PaySlip_{employee['emp_code']}_{month_year}.pdf"}
     )
 
-STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
-TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
+STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates")
 
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 def root_page():
-    index_path = os.path.join(TEMPLATES_DIR, "index.html")
-    if os.path.exists(index_path):
-        with open(index_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>Servagya Cloud Payroll Enterprise Engine Running</h1>"
+    possible_paths = [
+        os.path.join(TEMPLATES_DIR, "index.html"),
+        os.path.join(os.getcwd(), "templates", "index.html"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates", "index.html"),
+        "templates/index.html"
+    ]
+    for p in possible_paths:
+        if os.path.exists(p):
+            with open(p, "r", encoding="utf-8") as f:
+                return f.read()
+    return "<h1>esipfsolutions Enterprise Cloud Engine Running (Template Not Found)</h1>"
+
