@@ -707,7 +707,7 @@
 
     <!-- MAIN FRONTEND LOGIC JS -->
     <script>
-        const API_BASE = "http://localhost:8000/api";
+        const API_BASE = window.location.origin + "/api";
         let authToken = localStorage.getItem("servagya_token") || "";
         let currentUser = JSON.parse(localStorage.getItem("servagya_user") || "null");
         let companiesList = [];
