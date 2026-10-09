@@ -601,15 +601,25 @@ if os.path.exists(STATIC_DIR):
 
 @app.get("/", response_class=HTMLResponse)
 def root_page():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    cwd = os.getcwd()
     possible_paths = [
         os.path.join(TEMPLATES_DIR, "index.html"),
-        os.path.join(os.getcwd(), "templates", "index.html"),
-        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates", "index.html"),
-        "templates/index.html"
+        os.path.join(cwd, "templates", "index.html"),
+        os.path.join(cwd, "index.html"),
+        os.path.join(base_dir, "..", "templates", "index.html"),
+        os.path.join(base_dir, "..", "index.html"),
+        os.path.join(base_dir, "index.html"),
+        os.path.join(base_dir, "templates", "index.html"),
+        "templates/index.html",
+        "index.html",
+        "servagya_payroll/templates/index.html",
+        "servagya_payroll/index.html"
     ]
     for p in possible_paths:
         if os.path.exists(p):
             with open(p, "r", encoding="utf-8") as f:
                 return f.read()
-    return "<h1>esipfsolutions Enterprise Cloud Engine Running (Template Not Found)</h1>"
+    return f"<h1>esipfsolutions Enterprise Cloud Engine Running</h1><p>Debug info - CWD: {cwd} | BaseDir: {base_dir}</p>"
+
 
