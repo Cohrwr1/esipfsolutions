@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pyjwt
+argon2-cffi
+pyotp
+cryptography
+reportlab
+pandas
