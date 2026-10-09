@@ -737,10 +737,14 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
-            if (authToken && currentUser) {
-                document.getElementById("masterPinModal").classList.add("hidden");
-                showAppDashboard();
-            }
+            // Reset stale login sessions on page refresh to ensure clean PIN & login flow
+            localStorage.removeItem("servagya_token");
+            localStorage.removeItem("servagya_user");
+            authToken = "";
+            currentUser = null;
+            document.getElementById("masterPinModal").classList.remove("hidden");
+            document.getElementById("authContainer").classList.add("hidden");
+            document.getElementById("appContainer").classList.add("hidden");
         });
 
         // 1. MASTER PIN GATE
