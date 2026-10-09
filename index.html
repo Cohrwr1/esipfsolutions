@@ -73,6 +73,29 @@
                 </button>
             </form>
             <p class="text-slate-500 text-xs mt-4">default pin: <code class="bg-slate-800/80 px-2.5 py-1 rounded-md text-slate-300 font-mono">9999</code></p>
+    <!-- LAYER 1.5: 2FA OTP SECURITY VERIFICATION MODAL -->
+    <div id="otpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-xl hidden p-4">
+        <div class="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden">
+            <div class="w-14 h-14 bg-slate-950 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-emerald-400 shadow-inner">
+                <i data-lucide="key-round" class="w-7 h-7"></i>
+            </div>
+
+            <h2 class="text-2xl font-bold tracking-tight mb-1 text-white"><span class="logo-gradient text-2xl font-extrabold lowercase">esipfsolutions</span> 2FA security</h2>
+            <p class="text-slate-400 text-xs mb-4">enter 6-digit email security code sent to <b id="otpEmailTarget" class="text-brand-400"></b>.</p>
+            
+            <div id="otpHintNotice" class="mb-4 text-[11px] bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl text-slate-300 font-mono"></div>
+
+            <form onsubmit="handleVerifyOtp(event)" class="space-y-4">
+                <div>
+                    <input type="text" id="otpInput" maxlength="6" required placeholder="123456" 
+                           class="w-full text-center text-3xl tracking-[0.5em] font-mono py-3.5 bg-slate-950 border border-slate-800/80 rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white placeholder-slate-700 transition">
+                </div>
+                <div id="otpError" class="text-rose-400 text-xs hidden font-medium"></div>
+                <button type="submit" 
+                        class="btn-tactile w-full py-3.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 hover:from-emerald-500 hover:to-sky-500 text-white font-semibold rounded-2xl transition shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i> verify 2FA code & unlock
+                </button>
+            </form>
         </div>
     </div>
 
@@ -110,10 +133,7 @@
                 <button type="submit" class="btn-tactile w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-brand-600/20">
                     sign in to portal
                 </button>
-                <div class="text-xs text-slate-500 space-y-1.5 bg-slate-950/80 p-3.5 rounded-xl border border-slate-800/80">
-                    <div><b>owner super-admin demo:</b> <code class="text-brand-400 font-mono">owner</code> / <code class="text-brand-400 font-mono">owner123</code></div>
-                    <div><b>tenant admin demo:</b> <code class="text-brand-400 font-mono">apex_admin</code> / <code class="text-brand-400 font-mono">apex123</code></div>
-                </div>
+
             </form>
 
             <!-- Register Form -->
@@ -769,6 +789,8 @@
             }
         }
 
+        let pendingOtpUsername = "";
+
         async function handleLogin(e) {
             e.preventDefault();
             const username = document.getElementById("loginUsername").value;
@@ -784,6 +806,14 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
+                    if (data.require_2fa) {
+                        pendingOtpUsername = data.username;
+                        document.getElementById("otpEmailTarget").innerText = data.email_masked || "your email";
+                        document.getElementById("otpHintNotice").innerText = `2FA Security Code: ${data.otp_hint}`;
+                        document.getElementById("authContainer").classList.add("hidden");
+                        document.getElementById("otpModal").classList.remove("hidden");
+                        return;
+                    }
                     authToken = data.token;
                     currentUser = data.user;
                     localStorage.setItem("servagya_token", authToken);
@@ -791,18 +821,43 @@
                     
                     document.getElementById("authContainer").classList.add("hidden");
                     showAppDashboard();
-
-                    if (data.warning) {
-                        const warnEl = document.getElementById("warningBanner");
-                        document.getElementById("warningMsg").innerText = data.warning;
-                        warnEl.classList.remove("hidden");
-                    }
                 } else {
                     errEl.innerText = data.detail || "authentication failed.";
                     errEl.classList.remove("hidden");
                 }
             } catch (err) {
                 errEl.innerText = "error connecting to server.";
+                errEl.classList.remove("hidden");
+            }
+        }
+
+        async function handleVerifyOtp(e) {
+            e.preventDefault();
+            const otp = document.getElementById("otpInput").value;
+            const errEl = document.getElementById("otpError");
+            errEl.classList.add("hidden");
+
+            try {
+                const res = await fetch(`${API_BASE}/verify-otp`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({username: pendingOtpUsername, otp})
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem("servagya_token", authToken);
+                    localStorage.setItem("servagya_user", JSON.stringify(currentUser));
+                    
+                    document.getElementById("otpModal").classList.add("hidden");
+                    showAppDashboard();
+                } else {
+                    errEl.innerText = data.detail || "invalid security code.";
+                    errEl.classList.remove("hidden");
+                }
+            } catch (err) {
+                errEl.innerText = "error verifying security code.";
                 errEl.classList.remove("hidden");
             }
         }

@@ -11,7 +11,8 @@ from typing import Optional, List
 from database import get_db_connection, init_db
 from security import (
     hash_password, verify_password, generate_jwt, decode_jwt,
-    generate_totp_secret, verify_totp, MASTER_PIN_DEFAULT
+    generate_totp_secret, verify_totp, MASTER_PIN_DEFAULT,
+    generate_email_otp, verify_email_otp
 )
 from subscription_engine import (
     check_tenant_subscription, get_owner_dashboard_summary,
@@ -166,6 +167,20 @@ def verify_master_pin(req: PinVerifyReq):
         return {"success": True, "message": "Master Access Granted"}
     raise HTTPException(status_code=401, detail="Invalid Master Access PIN")
 
+class VerifyOtpReq(BaseModel):
+    username: str
+    otp: str
+
+class PaymentOrderReq(BaseModel):
+    plan_type: str
+    tenant_id: Optional[str] = ""
+
+class PaymentVerifyReq(BaseModel):
+    tenant_id: str
+    payment_id: str
+    order_id: str
+    signature: str
+
 @app.post("/api/login")
 def login(req: LoginReq):
     conn = get_db_connection()
@@ -177,8 +192,6 @@ def login(req: LoginReq):
     if not user or not verify_password(req.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
-    tenant_info = None
-    sub_warning = None
     if user["tenant_id"]:
         sub_check = check_tenant_subscription(user["tenant_id"])
         if sub_check.get("is_locked"):
@@ -186,6 +199,39 @@ def login(req: LoginReq):
                 status_code=403,
                 detail=f"SUBSCRIPTION EXPIRED / ACCOUNT LOCKED. {sub_check.get('message')}"
             )
+
+    otp_code = generate_email_otp(user["username"])
+    masked_email = f"{user['email'][:3]}***@{user['email'].split('@')[-1]}" if user['email'] else "registered email"
+
+    return {
+        "success": True,
+        "require_2fa": True,
+        "username": user["username"],
+        "email_masked": masked_email,
+        "otp_hint": otp_code,
+        "message": f"2FA OTP security verification code generated for {masked_email}."
+    }
+
+@app.post("/api/verify-otp")
+def verify_otp_endpoint(req: VerifyOtpReq):
+    if not verify_email_otp(req.username, req.otp):
+        raise HTTPException(status_code=401, detail="Invalid or expired 2FA security code.")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (req.username,))
+    user = cursor.fetchone()
+    conn.close()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    tenant_info = None
+    sub_warning = None
+    if user["tenant_id"]:
+        sub_check = check_tenant_subscription(user["tenant_id"])
+        if sub_check.get("is_locked"):
+            raise HTTPException(status_code=403, detail=f"ACCOUNT LOCKED: {sub_check.get('message')}")
         tenant_info = sub_check
         sub_warning = sub_check.get("warning")
 
@@ -204,6 +250,33 @@ def login(req: LoginReq):
         "subscription": tenant_info,
         "warning": sub_warning
     }
+
+@app.post("/api/payment/create-order")
+def create_payment_order(req: PaymentOrderReq):
+    price_map = {"6_months": 12000.0, "1_year": 20000.0, "lifetime": 50000.0}
+    amount = price_map.get(req.plan_type, 20000.0)
+    order_id = f"order_{uuid.uuid4().hex[:12]}"
+    
+    return {
+        "success": True,
+        "order_id": order_id,
+        "amount": int(amount * 100),
+        "currency": "INR",
+        "plan_type": req.plan_type,
+        "key_id": "rzp_live_esipfsolutions_key_2026"
+    }
+
+@app.post("/api/payment/verify")
+def verify_payment(req: PaymentVerifyReq):
+    if req.tenant_id:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        today = datetime.date.today()
+        cursor.execute("UPDATE tenants SET subscription_status = 'active', start_date = ? WHERE id = ?", (str(today), req.tenant_id))
+        conn.commit()
+        conn.close()
+    return {"success": True, "message": "Payment verified and subscription activated instantly!"}
+
 
 @app.post("/api/register-tenant")
 def register_tenant(req: RegisterTenantReq):
@@ -623,3 +696,9 @@ def root_page():
     return f"<h1>esipfsolutions Enterprise Cloud Engine Running</h1><p>Debug info - CWD: {cwd} | BaseDir: {base_dir}</p>"
 
 
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port)

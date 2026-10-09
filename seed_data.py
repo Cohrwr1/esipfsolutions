@@ -13,8 +13,8 @@ def seed():
     # 2. Owner Super Admin Account (User)
     cursor.execute('''
         INSERT OR REPLACE INTO users (id, tenant_id, username, email, password_hash, role, is_2fa_enabled)
-        VALUES ('owner_usr_001', NULL, 'owner', 'owner@servagyapayroll.com', ?, 'owner', 0)
-    ''', (hash_password("owner123"),))
+        VALUES ('owner_usr_001', NULL, 'OwNeR', 'owner@servagyapayroll.com', ?, 'owner', 0)
+    ''', (hash_password("Esipfsolutions@Owner"),))
 
     # 3. Tenants (Subscribers)
     # Active 1-Year Tenant
