@@ -13,12 +13,14 @@ from seed_data import seed
 from security import (
     hash_password, verify_password, generate_jwt, decode_jwt,
     generate_totp_secret, verify_totp, MASTER_PIN_DEFAULT,
-    generate_email_otp, verify_email_otp, get_totp_uri
+    generate_email_otp, verify_email_otp, get_totp_uri,
+    send_google_email_otp, send_account_approved_email
 )
 from subscription_engine import (
     check_tenant_subscription, get_owner_dashboard_summary,
     owner_lock_tenant, owner_unlock_tenant, owner_extend_subscription, owner_convert_to_lifetime,
-    owner_update_tenant, owner_undo_tenant_update, owner_delete_tenant
+    owner_update_tenant, owner_undo_tenant_update, owner_delete_tenant,
+    owner_approve_request, owner_decline_request
 )
 from statutory_engine import (
     calculate_epf, calculate_esi, calculate_professional_tax,
@@ -61,6 +63,9 @@ class RegisterTenantReq(BaseModel):
     admin_username: str
     admin_password: str
     plan_type: str # '6_months', '1_year', 'lifetime'
+    mode: Optional[str] = "request_approval" # 'razorpay' or 'request_approval'
+    payment_id: Optional[str] = None
+    order_id: Optional[str] = None
 
 class CompanyReq(BaseModel):
     company_name: str
@@ -213,7 +218,7 @@ def login(req: LoginReq):
             cursor.execute("SELECT * FROM users WHERE LOWER(username) = 'owner'")
             user = cursor.fetchone()
     else:
-        cursor.execute("SELECT * FROM users WHERE username = ?", (req.username,))
+        cursor.execute("SELECT * FROM users WHERE LOWER(username) = LOWER(?)", (req.username,))
         user = cursor.fetchone()
 
     if not user or not verify_password(req.password, user["password_hash"]):
@@ -223,6 +228,18 @@ def login(req: LoginReq):
     user_dict = dict(user)
     if user_dict["tenant_id"]:
         sub_check = check_tenant_subscription(user_dict["tenant_id"])
+        if sub_check.get("status") == "pending_approval":
+            conn.close()
+            raise HTTPException(
+                status_code=403,
+                detail="ACCESS PENDING APPROVAL: Your account request is awaiting Owner approval. You will be able to log in once the Owner approves your request."
+            )
+        if sub_check.get("status") == "rejected":
+            conn.close()
+            raise HTTPException(
+                status_code=403,
+                detail="ACCESS DECLINED: Your registration request was declined by the Owner. Please contact Administrator."
+            )
         if sub_check.get("is_locked"):
             conn.close()
             raise HTTPException(
@@ -262,18 +279,16 @@ def login(req: LoginReq):
 
     conn.close()
     otp_code = generate_email_otp(user_dict["username"])
+    # Send actual email via Google SMTP
+    send_google_email_otp(user_dict["email"], otp_code, user_dict["username"])
     masked_email = f"{user_dict['email'][:3]}***@{user_dict['email'].split('@')[-1]}" if user_dict.get('email') else "registered email"
-
-    totp_secret = user_dict.get("totp_secret", "")
 
     return {
         "success": True,
         "require_2fa": True,
         "username": user_dict["username"],
         "email_masked": masked_email,
-        "totp_secret": totp_secret,
-        "otp_hint": otp_code,
-        "message": f"2FA Security Code generated for {masked_email}."
+        "message": f"2FA Security Code sent to {masked_email} via Google Mail."
     }
 
 @app.post("/api/2fa/google-setup")
@@ -416,14 +431,27 @@ def register_tenant(req: RegisterTenantReq):
     start_date = datetime.date.today()
     expiry_date = start_date + datetime.timedelta(days=days)
 
+    if req.mode == "razorpay":
+        if not req.payment_id:
+            raise HTTPException(status_code=400, detail="Razorpay payment verification is required to activate subscription directly.")
+        status = "active"
+        price_paid = price
+        expiry = str(expiry_date)
+        resp_msg = f"Payment verified! Organization '{req.organization_name}' activated successfully under plan '{req.plan_type}'."
+    else:
+        status = "pending_approval"
+        price_paid = 0.0
+        expiry = None
+        resp_msg = f"Access request for '{req.organization_name}' submitted to Owner! Access will be granted once the Owner approves your request."
+
     conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
         cursor.execute('''
             INSERT INTO tenants (id, name, email, phone, plan_type, subscription_status, start_date, expiry_date, price_paid)
-            VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?)
-        ''', (tenant_id, req.organization_name, req.email, req.phone, req.plan_type, str(start_date), str(expiry_date), price))
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (tenant_id, req.organization_name, req.email, req.phone, req.plan_type, status, str(start_date), expiry, price_paid))
 
         cursor.execute('''
             INSERT INTO users (id, tenant_id, username, email, password_hash, role)
@@ -439,9 +467,40 @@ def register_tenant(req: RegisterTenantReq):
     conn.close()
     return {
         "success": True,
-        "message": f"Organization '{req.organization_name}' registered successfully under plan '{req.plan_type}'.",
-        "tenant_id": tenant_id
+        "message": resp_msg,
+        "tenant_id": tenant_id,
+        "status": status
     }
+
+class OwnerSettingsReq(BaseModel):
+    gmail_app_password: Optional[str] = None
+    gmail_user: Optional[str] = None
+
+@app.post("/api/owner/approve-request")
+def approve_request(req: OwnerActionReq, current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "owner":
+        raise HTTPException(status_code=403, detail="Owner privileges required.")
+    return owner_approve_request(req.tenant_id)
+
+@app.post("/api/owner/decline-request")
+def decline_request(req: OwnerActionReq, current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "owner":
+        raise HTTPException(status_code=403, detail="Owner privileges required.")
+    return owner_decline_request(req.tenant_id)
+
+@app.post("/api/owner/settings")
+def update_owner_settings(req: OwnerSettingsReq, current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "owner":
+        raise HTTPException(status_code=403, detail="Owner privileges required.")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    if req.gmail_app_password is not None:
+        cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('gmail_app_password', ?)", (req.gmail_app_password.strip(),))
+    if req.gmail_user is not None:
+        cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('gmail_user', ?)", (req.gmail_user.strip(),))
+    conn.commit()
+    conn.close()
+    return {"success": True, "message": "Settings updated successfully."}
 
 # --- 2. Owner Super Admin API (Edit / Undo / Controls) ---
 

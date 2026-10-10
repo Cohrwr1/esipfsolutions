@@ -21,6 +21,20 @@ def check_tenant_subscription(tenant_id: str) -> dict:
     plan_type = tenant["plan_type"]
     expiry_str = tenant["expiry_date"]
 
+    if status == "pending_approval":
+        return {
+            "status": "pending_approval",
+            "is_locked": True,
+            "message": "ACCOUNT AWAITING OWNER APPROVAL. Please wait for the Owner to approve your access request."
+        }
+
+    if status == "rejected":
+        return {
+            "status": "rejected",
+            "is_locked": True,
+            "message": "ACCOUNT ACCESS DECLINED by Owner. Please contact Administrator."
+        }
+
     if plan_type == "lifetime":
         return {
             "status": "active",
@@ -172,11 +186,57 @@ def owner_delete_tenant(tenant_id: str):
     conn.close()
     return {"success": True, "message": "Tenant organization and user accounts permanently deleted."}
 
+def owner_approve_request(tenant_id: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tenants WHERE id = ?", (tenant_id,))
+    tenant = cursor.fetchone()
+    if not tenant:
+        conn.close()
+        return {"success": False, "message": "Access request not found."}
+
+    days_map = {"6_months": 180, "1_year": 365, "lifetime": 36500}
+    price_map = {"6_months": 12000.0, "1_year": 20000.0, "lifetime": 50000.0}
+
+    days = days_map.get(tenant["plan_type"], 365)
+    price = price_map.get(tenant["plan_type"], 20000.0)
+    today = datetime.date.today()
+    expiry = today + datetime.timedelta(days=days)
+
+    cursor.execute("""
+        UPDATE tenants
+        SET subscription_status = 'active', start_date = ?, expiry_date = ?, price_paid = ?
+        WHERE id = ?
+    """, (str(today), str(expiry), price, tenant_id))
+    conn.commit()
+    conn.close()
+
+    try:
+        from security import send_account_approved_email
+        send_account_approved_email(tenant["email"], tenant["name"])
+    except Exception:
+        pass
+
+    return {"success": True, "message": f"Access granted for '{tenant['name']}'! Account is now active."}
+
+def owner_decline_request(tenant_id: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM tenants WHERE id = ?", (tenant_id,))
+    row = cursor.fetchone()
+    name = row["name"] if row else "Tenant"
+
+    cursor.execute("DELETE FROM users WHERE tenant_id = ?", (tenant_id,))
+    cursor.execute("DELETE FROM tenants WHERE id = ?", (tenant_id,))
+    conn.commit()
+    conn.close()
+    return {"success": True, "message": f"Access request for '{name}' was declined and removed."}
+
 def get_owner_dashboard_summary():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT COUNT(*) as total FROM tenants")
+    cursor.execute("SELECT COUNT(*) as total FROM tenants WHERE subscription_status != 'pending_approval'")
     total_tenants = cursor.fetchone()["total"]
     
     cursor.execute("SELECT COUNT(*) as active FROM tenants WHERE subscription_status = 'active'")
@@ -185,12 +245,29 @@ def get_owner_dashboard_summary():
     cursor.execute("SELECT COUNT(*) as locked FROM tenants WHERE subscription_status = 'locked'")
     locked_tenants = cursor.fetchone()["locked"]
 
-    cursor.execute("SELECT SUM(price_paid) as total_revenue FROM tenants")
+    cursor.execute("SELECT COUNT(*) as pending FROM tenants WHERE subscription_status = 'pending_approval'")
+    pending_count = cursor.fetchone()["pending"]
+
+    cursor.execute("SELECT SUM(price_paid) as total_revenue FROM tenants WHERE subscription_status = 'active'")
     rev = cursor.fetchone()["total_revenue"]
     total_revenue = rev if rev else 0.0
 
-    cursor.execute("SELECT id, name, email, phone, plan_type, subscription_status, start_date, expiry_date, price_paid FROM tenants ORDER BY created_at DESC")
+    cursor.execute("""
+        SELECT id, name, email, phone, plan_type, subscription_status, start_date, expiry_date, price_paid, created_at
+        FROM tenants 
+        WHERE subscription_status != 'pending_approval'
+        ORDER BY created_at DESC
+    """)
     all_tenants = [dict(row) for row in cursor.fetchall()]
+
+    cursor.execute("""
+        SELECT t.id, t.name, t.email, t.phone, t.plan_type, t.subscription_status, t.created_at, u.username as admin_username
+        FROM tenants t
+        LEFT JOIN users u ON u.tenant_id = t.id
+        WHERE t.subscription_status = 'pending_approval'
+        ORDER BY t.created_at DESC
+    """)
+    pending_requests = [dict(row) for row in cursor.fetchall()]
 
     conn.close()
 
@@ -198,7 +275,9 @@ def get_owner_dashboard_summary():
         "total_tenants": total_tenants,
         "active_tenants": active_tenants,
         "locked_tenants": locked_tenants,
+        "pending_count": pending_count,
         "total_revenue": total_revenue,
         "pricing_tiers": PRICING_TIERS,
-        "tenants": all_tenants
+        "tenants": all_tenants,
+        "pending_requests": pending_requests
     }

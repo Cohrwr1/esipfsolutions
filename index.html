@@ -82,36 +82,24 @@
     <div id="otpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-xl hidden p-4">
         <div class="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden">
             <div class="w-14 h-14 bg-slate-950 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-emerald-400 shadow-inner">
-                <i data-lucide="key-round" class="w-7 h-7"></i>
+                <i data-lucide="mail-check" class="w-7 h-7"></i>
             </div>
 
             <h2 class="text-2xl font-bold tracking-tight mb-1 text-white"><span class="logo-gradient text-2xl font-extrabold lowercase">esipfsolutions</span> 2FA security</h2>
-            <p class="text-slate-400 text-xs mb-4">enter 6-digit email security code sent to <b id="otpEmailTarget" class="text-brand-400"></b>.</p>
-            
-            <div id="otpHintNotice" class="mb-4 text-[11px] bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl text-slate-300 font-mono"></div>
-
-            <div class="flex gap-2 mb-3">
-                <button type="button" onclick="switchToEmail2FA()" id="btn2faEmail" class="btn-tactile flex-1 py-1.5 bg-brand-600 text-white font-semibold text-xs rounded-lg">Email 2FA</button>
-                <button type="button" onclick="setupGoogle2FA()" id="btn2faGoogle" class="btn-tactile flex-1 py-1.5 bg-slate-800 text-slate-300 font-semibold text-xs rounded-lg hover:bg-slate-700">Google Authenticator</button>
-            </div>
-
-            <div id="google2faContainer" class="hidden space-y-2 mb-4 text-xs bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
-                <p class="text-slate-300 font-medium text-[11px]">Scan QR Code with <b>Google Authenticator App</b>:</p>
-                <img id="googleQrImg" src="" alt="Google Authenticator QR" class="w-32 h-32 mx-auto rounded-xl border border-slate-700 p-1 bg-white">
-                <p class="text-slate-400 text-[10px]">Or enter secret key: <code id="googleSecretKey" class="text-brand-400 font-mono font-bold"></code></p>
-            </div>
+            <p class="text-slate-300 text-xs mb-6">Enter the 6-digit security verification code sent to <b id="otpEmailTarget" class="text-brand-400"></b> via Google Mail.</p>
 
             <form onsubmit="handleVerifyOtp(event)" class="space-y-4">
                 <div>
-                    <input type="text" id="otpInput" maxlength="6" required placeholder="123456" 
+                    <input type="text" id="otpInput" maxlength="6" required placeholder="• • • • • •" 
                            class="w-full text-center text-3xl tracking-[0.5em] font-mono py-3.5 bg-slate-950 border border-slate-800/80 rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white placeholder-slate-700 transition">
                 </div>
                 <div id="otpError" class="text-rose-400 text-xs hidden font-medium"></div>
                 <button type="submit" 
                         class="btn-tactile w-full py-3.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 hover:from-emerald-500 hover:to-sky-500 text-white font-semibold rounded-2xl transition shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2">
-                    <i data-lucide="check-circle" class="w-4 h-4"></i> verify 2FA code & unlock
+                    <i data-lucide="check-circle" class="w-4 h-4"></i> verify code & unlock portal
                 </button>
             </form>
+            <p class="text-slate-500 text-[11px] mt-4">Verified once per device • Next login from this browser will bypass OTP</p>
         </div>
     </div>
 
@@ -187,12 +175,12 @@
                     </select>
                 </div>
                 <div id="regError" class="text-rose-400 text-xs hidden"></div>
-                <div class="grid grid-cols-2 gap-2 pt-1">
-                    <button type="submit" class="btn-tactile w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-emerald-600/20">
-                        activate subscription
+                <div class="space-y-2 pt-2">
+                    <button type="button" onclick="payWithRazorpayAndRegister()" class="btn-tactile w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2">
+                        <i data-lucide="credit-card" class="w-4 h-4"></i> Option 1: Pay via Razorpay & Activate Instantly
                     </button>
-                    <button type="button" onclick="payWithRazorpay()" class="btn-tactile w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-1.5">
-                        <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> pay via razorpay
+                    <button type="button" onclick="requestAccessFromOwner()" class="btn-tactile w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-2">
+                        <i data-lucide="send" class="w-4 h-4 text-emerald-400"></i> Option 2: Request Access from Owner (Cash / Offline)
                     </button>
                 </div>
             </form>
@@ -240,9 +228,14 @@
                     <h1 class="text-2xl font-bold text-white tracking-tight">owner master control panel</h1>
                     <p class="text-slate-400 text-xs">global multi-tenant esipfsolutions management & edit controls</p>
                 </div>
-                <button onclick="loadOwnerSummary()" class="btn-tactile px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-2 shadow-sm">
-                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> refresh data
-                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="openGoogleSettingsModal()" class="btn-tactile px-3.5 py-2 bg-brand-950/80 hover:bg-brand-900 text-brand-300 border border-brand-800/80 text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="mail" class="w-3.5 h-3.5"></i> google email settings
+                    </button>
+                    <button onclick="loadOwnerSummary()" class="btn-tactile px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-2 shadow-sm">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> refresh data
+                    </button>
+                </div>
             </div>
 
             <!-- Stats Grid -->
@@ -260,8 +253,37 @@
                     <div id="statLocked" class="text-3xl font-black text-rose-400">0</div>
                 </div>
                 <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 relative overflow-hidden">
-                    <div class="text-slate-400 text-xs font-medium mb-1">total organizations</div>
-                    <div id="statTotal" class="text-3xl font-black text-white">0</div>
+                    <div class="text-slate-400 text-xs font-medium mb-1">pending access requests</div>
+                    <div id="statPending" class="text-3xl font-black text-amber-400">0</div>
+                </div>
+            </div>
+
+            <!-- Access Requests Pending Owner Approval Section -->
+            <div id="pendingRequestsContainer" class="bg-slate-900 border border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl">
+                <div class="px-6 py-4 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between">
+                    <h3 class="font-bold text-amber-300 text-sm flex items-center gap-2">
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i> access requests pending owner approval
+                        <span id="pendingRequestsBadge" class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">0</span>
+                    </h3>
+                    <span class="text-[11px] text-amber-400/80">offline / cash registration requests awaiting your decision</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                            <tr>
+                                <th class="p-4">organization</th>
+                                <th class="p-4">admin user</th>
+                                <th class="p-4">email (google verified)</th>
+                                <th class="p-4">phone</th>
+                                <th class="p-4">plan requested</th>
+                                <th class="p-4">requested at</th>
+                                <th class="p-4 text-right">decision</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ownerPendingRequestsTable" class="divide-y divide-slate-800">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -744,6 +766,36 @@
                 </div>
             </div>
         </div>
+    <!-- MODAL: GOOGLE EMAIL SETTINGS -->
+    <div id="googleSettingsModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md hidden p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i data-lucide="mail" class="w-5 h-5 text-brand-400"></i> Google Email Dispatch Settings
+                </h3>
+                <button onclick="closeGoogleSettingsModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <p class="text-slate-400 text-xs mb-4">
+                Configure your 16-character <b>Google App Password</b> from your Google Account (<code class="text-brand-300">gulatihriday.003@gmail.com</code>). This enables Google to dispatch real 2FA verification emails to newly registered users.
+            </p>
+            <form onsubmit="handleSaveGoogleSettings(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Sender Email</label>
+                    <input type="email" id="googleSenderEmail" value="gulatihriday.003@gmail.com" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs" readonly>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Google App Password (16 characters)</label>
+                    <input type="password" id="googleAppPasswordInput" placeholder="xxxx xxxx xxxx xxxx" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono" required>
+                    <p class="text-slate-500 text-[10px] mt-1.5">Get this from: Google Account &rarr; Security &rarr; 2-Step Verification &rarr; App passwords</p>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeGoogleSettingsModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-700">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-500">Save Google Credentials</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- MAIN FRONTEND LOGIC JS -->
@@ -835,7 +887,6 @@
                     if (data.require_2fa) {
                         pendingOtpUsername = data.username;
                         document.getElementById("otpEmailTarget").innerText = data.email_masked || "your email";
-                        document.getElementById("otpHintNotice").innerText = `2FA Security Code: ${data.otp_hint}`;
                         document.getElementById("authContainer").classList.add("hidden");
                         document.getElementById("otpModal").classList.remove("hidden");
                         return;
@@ -848,40 +899,27 @@
                     document.getElementById("authContainer").classList.add("hidden");
                     showAppDashboard();
                 } else {
-                    errEl.innerText = data.detail || "authentication failed.";
+                    errEl.innerText = data.detail || "Authentication failed.";
                     errEl.classList.remove("hidden");
                 }
             } catch (err) {
-                errEl.innerText = "error connecting to server.";
+                errEl.innerText = "Error connecting to server.";
                 errEl.classList.remove("hidden");
             }
         }
 
         async function handleVerifyOtp(e) {
             e.preventDefault();
-            const otp = document.getElementById("otpInput").value;
+            const otp = document.getElementById("otpInput").value.trim();
             const deviceToken = localStorage.getItem("esipfsolutions_trusted_device") || "";
             const errEl = document.getElementById("otpError");
             errEl.classList.add("hidden");
 
             try {
-                let isGoogleVerified = false;
-                if (!document.getElementById("google2faContainer").classList.contains("hidden")) {
-                    const gRes = await fetch(`${API_BASE}/2fa/google-verify`, {
-                        method: "POST",
-                        headers: {"Content-Type": "application/json"},
-                        body: JSON.stringify({username: pendingOtpUsername, code: otp})
-                    });
-                    const gData = await gRes.json();
-                    if (gRes.ok && gData.success) {
-                        isGoogleVerified = true;
-                    }
-                }
-
                 const res = await fetch(`${API_BASE}/verify-otp`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({username: pendingOtpUsername, otp: isGoogleVerified ? "123456" : otp, device_token: deviceToken})
+                    body: JSON.stringify({username: pendingOtpUsername, otp: otp, device_token: deviceToken})
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
@@ -896,74 +934,119 @@
                     document.getElementById("otpModal").classList.add("hidden");
                     showAppDashboard();
                 } else {
-                    errEl.innerText = data.detail || "invalid security code.";
+                    errEl.innerText = data.detail || "Invalid security code.";
                     errEl.classList.remove("hidden");
                 }
             } catch (err) {
-                errEl.innerText = "error verifying security code.";
+                errEl.innerText = "Error verifying security code.";
                 errEl.classList.remove("hidden");
             }
         }
 
-        function switchToEmail2FA() {
-            document.getElementById("google2faContainer").classList.add("hidden");
-            document.getElementById("otpHintNotice").classList.remove("hidden");
-            document.getElementById("btn2faEmail").className = "btn-tactile flex-1 py-1.5 bg-brand-600 text-white font-semibold text-xs rounded-lg";
-            document.getElementById("btn2faGoogle").className = "btn-tactile flex-1 py-1.5 bg-slate-800 text-slate-300 font-semibold text-xs rounded-lg hover:bg-slate-700";
+        function getRegisterFormData() {
+            const org = document.getElementById("regOrg").value.trim();
+            const email = document.getElementById("regEmail").value.trim();
+            const phone = document.getElementById("regPhone").value.trim();
+            const username = document.getElementById("regUsername").value.trim();
+            const password = document.getElementById("regPassword").value;
+            const plan = document.getElementById("regPlan").value;
+            const errEl = document.getElementById("regError");
+
+            if (!org || !email || !phone || !username || !password) {
+                errEl.innerText = "Please fill in all registration fields.";
+                errEl.classList.remove("hidden");
+                return null;
+            }
+            errEl.classList.add("hidden");
+            return {org, email, phone, username, password, plan};
         }
 
-        async function setupGoogle2FA() {
-            document.getElementById("otpHintNotice").classList.add("hidden");
-            document.getElementById("google2faContainer").classList.remove("hidden");
-            document.getElementById("btn2faGoogle").className = "btn-tactile flex-1 py-1.5 bg-brand-600 text-white font-semibold text-xs rounded-lg";
-            document.getElementById("btn2faEmail").className = "btn-tactile flex-1 py-1.5 bg-slate-800 text-slate-300 font-semibold text-xs rounded-lg hover:bg-slate-700";
+        async function requestAccessFromOwner() {
+            const formData = getRegisterFormData();
+            if (!formData) return;
+            const errEl = document.getElementById("regError");
 
             try {
-                const res = await fetch(`${API_BASE}/2fa/google-setup`, {
+                const res = await fetch(`${API_BASE}/register-tenant`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({username: pendingOtpUsername})
+                    body: JSON.stringify({
+                        organization_name: formData.org,
+                        email: formData.email,
+                        phone: formData.phone,
+                        admin_username: formData.username,
+                        admin_password: formData.password,
+                        plan_type: formData.plan,
+                        mode: "request_approval"
+                    })
                 });
                 const data = await res.json();
-                if (data.success) {
-                    document.getElementById("googleQrImg").src = data.qr_code_url;
-                    document.getElementById("googleSecretKey").innerText = data.secret;
+                if (res.ok && data.success) {
+                    alert(`Access Request Submitted!\n\nYour request for '${formData.org}' has been delivered to the Owner. Once the Owner approves your request, you will receive full access to sign in.`);
+                    switchAuthTab('login');
+                } else {
+                    errEl.innerText = data.detail || "Request submission failed.";
+                    errEl.classList.remove("hidden");
                 }
             } catch (err) {
-                console.error("Google 2FA setup error:", err);
+                errEl.innerText = "Error connecting to server.";
+                errEl.classList.remove("hidden");
             }
         }
 
-        async function payWithRazorpay() {
-            const plan = document.getElementById("regPlan").value;
-            const org = document.getElementById("regOrg").value || "New Tenant";
-            const email = document.getElementById("regEmail").value || "client@esipfsolutions.in";
-            const phone = document.getElementById("regPhone").value || "9876543210";
+        async function payWithRazorpayAndRegister() {
+            const formData = getRegisterFormData();
+            if (!formData) return;
+            const errEl = document.getElementById("regError");
 
             try {
                 const res = await fetch(`${API_BASE}/payment/create-order`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({plan_type: plan})
+                    body: JSON.stringify({plan_type: formData.plan})
                 });
                 const orderData = await res.json();
-                
+
                 const options = {
                     key: orderData.key_id,
                     amount: orderData.amount,
                     currency: orderData.currency,
                     name: "esipfsolutions Enterprise",
-                    description: `Subscription Payment (${plan})`,
+                    description: `Subscription Payment (${formData.plan})`,
                     image: "https://esipfsolutions.in/favicon.ico",
                     order_id: orderData.order_id,
                     handler: async function (response) {
-                        alert(`Payment Successful! Razorpay Payment ID: ${response.razorpay_payment_id || 'pay_live_2026'}`);
-                        document.getElementById("registerForm").dispatchEvent(new Event("submit"));
+                        try {
+                            const regRes = await fetch(`${API_BASE}/register-tenant`, {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({
+                                    organization_name: formData.org,
+                                    email: formData.email,
+                                    phone: formData.phone,
+                                    admin_username: formData.username,
+                                    admin_password: formData.password,
+                                    plan_type: formData.plan,
+                                    mode: "razorpay",
+                                    payment_id: response.razorpay_payment_id || "pay_mock_verified",
+                                    order_id: response.razorpay_order_id || orderData.order_id
+                                })
+                            });
+                            const regData = await regRes.json();
+                            if (regRes.ok && regData.success) {
+                                alert(`Payment & Activation Successful!\n\nOrganization '${formData.org}' is now active under the ${formData.plan} plan. You can now log in.`);
+                                switchAuthTab('login');
+                            } else {
+                                alert(regData.detail || "Registration failed after payment.");
+                            }
+                        } catch (e) {
+                            alert("Error completing registration after payment.");
+                        }
                     },
                     prefill: {
-                        name: org,
-                        email: email,
-                        contact: phone
+                        name: formData.org,
+                        email: formData.email,
+                        contact: formData.phone
                     },
                     theme: {
                         color: "#2563eb"
@@ -974,37 +1057,6 @@
                 rzp.open();
             } catch (err) {
                 alert("Opening Razorpay Payment Checkout Gateway...");
-            }
-        }
-
-        async function handleRegister(e) {
-            e.preventDefault();
-            const org = document.getElementById("regOrg").value;
-            const email = document.getElementById("regEmail").value;
-            const phone = document.getElementById("regPhone").value;
-            const username = document.getElementById("regUsername").value;
-            const password = document.getElementById("regPassword").value;
-            const plan = document.getElementById("regPlan").value;
-            const errEl = document.getElementById("regError");
-            errEl.classList.add("hidden");
-
-            try {
-                const res = await fetch(`${API_BASE}/register-tenant`, {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({organization_name: org, email, phone, admin_username: username, admin_password: password, plan_type: plan})
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    alert(data.message);
-                    switchAuthTab('login');
-                } else {
-                    errEl.innerText = data.detail || "registration failed.";
-                    errEl.classList.remove("hidden");
-                }
-            } catch (err) {
-                errEl.innerText = "error connecting to server.";
-                errEl.classList.remove("hidden");
             }
         }
 
@@ -1042,17 +1094,56 @@
                     headers: {"Authorization": `Bearer ${authToken}`}
                 });
                 const data = await res.json();
-                currentTenantsCache = data.tenants;
+                currentTenantsCache = data.tenants || [];
                 
                 document.getElementById("statRevenue").innerText = `₹${data.total_revenue.toLocaleString()}`;
                 document.getElementById("statActive").innerText = data.active_tenants;
                 document.getElementById("statLocked").innerText = data.locked_tenants;
-                document.getElementById("statTotal").innerText = data.total_tenants;
+                const pendingCountEl = document.getElementById("statPending");
+                if (pendingCountEl) pendingCountEl.innerText = data.pending_count || 0;
 
+                // Render Pending Access Requests
+                const pendingTbody = document.getElementById("ownerPendingRequestsTable");
+                const pendingBadge = document.getElementById("pendingRequestsBadge");
+                if (pendingTbody) {
+                    pendingTbody.innerHTML = "";
+                    const pendingList = data.pending_requests || [];
+                    if (pendingBadge) pendingBadge.innerText = pendingList.length;
+                    
+                    if (pendingList.length === 0) {
+                        pendingTbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500 italic">No pending access requests. All registered organizations are processed.</td></tr>`;
+                    } else {
+                        pendingList.forEach(r => {
+                            pendingTbody.innerHTML += `
+                                <tr class="bg-amber-950/20">
+                                    <td class="p-4 font-bold text-white">${r.name}</td>
+                                    <td class="p-4 font-mono font-semibold text-brand-300">${r.admin_username || 'N/A'}</td>
+                                    <td class="p-4 font-semibold text-slate-200">
+                                        ${r.email}
+                                        <span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">✓ Google Email</span>
+                                    </td>
+                                    <td class="p-4 text-slate-400 font-mono">${r.phone || 'N/A'}</td>
+                                    <td class="p-4 font-bold text-amber-400">${r.plan_type.toUpperCase()}</td>
+                                    <td class="p-4 font-mono text-slate-400">${r.created_at || 'Recently'}</td>
+                                    <td class="p-4 text-right space-x-1.5">
+                                        <button onclick="approveOwnerRequest('${r.id}', '${r.name}')" class="btn-tactile px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs shadow-md">
+                                            ✅ Approve Access
+                                        </button>
+                                        <button onclick="declineOwnerRequest('${r.id}', '${r.name}')" class="btn-tactile px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg text-xs shadow-md">
+                                            ❌ Decline
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+                }
+
+                // Render Active / Locked Tenants
                 const tbody = document.getElementById("ownerTenantsTable");
                 tbody.innerHTML = "";
                 
-                data.tenants.forEach(t => {
+                currentTenantsCache.forEach(t => {
                     const statusBadge = t.subscription_status === 'active' 
                         ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">ACTIVE</span>`
                         : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 border border-rose-500/30 text-rose-400">LOCKED</span>`;
@@ -1062,7 +1153,7 @@
                             <td class="p-4 font-bold text-white">${t.name}</td>
                             <td class="p-4">${t.email}<br><span class="text-slate-500">${t.phone || ''}</span></td>
                             <td class="p-4 font-semibold text-brand-400">${t.plan_type.toUpperCase()}</td>
-                            <td class="p-4 font-mono">${t.expiry_date}</td>
+                            <td class="p-4 font-mono">${t.expiry_date || 'N/A'}</td>
                             <td class="p-4 font-mono text-emerald-400 font-bold">₹${t.price_paid.toLocaleString()}</td>
                             <td class="p-4">${statusBadge}</td>
                             <td class="p-4 text-right space-x-1">
@@ -1083,6 +1174,52 @@
             } catch (err) {
                 console.error("Owner load error:", err);
             }
+        }
+
+        async function approveOwnerRequest(id, name) {
+            if (!confirm(`Are you sure you want to APPROVE access for '${name}'? Their account will be activated and an approval email will be dispatched.`)) return;
+            const res = await fetch(`${API_BASE}/owner/approve-request`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+                body: JSON.stringify({tenant_id: id})
+            });
+            const data = await res.json();
+            alert(data.message || "Access approved!");
+            loadOwnerSummary();
+        }
+
+        async function declineOwnerRequest(id, name) {
+            if (!confirm(`Are you sure you want to DECLINE access for '${name}'? Their request will be removed and they will not receive access.`)) return;
+            const res = await fetch(`${API_BASE}/owner/decline-request`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+                body: JSON.stringify({tenant_id: id})
+            });
+            const data = await res.json();
+            alert(data.message || "Request declined.");
+            loadOwnerSummary();
+        }
+
+        function openGoogleSettingsModal() {
+            document.getElementById("googleSettingsModal").classList.remove("hidden");
+        }
+
+        function closeGoogleSettingsModal() {
+            document.getElementById("googleSettingsModal").classList.add("hidden");
+        }
+
+        async function handleSaveGoogleSettings(e) {
+            e.preventDefault();
+            const pwd = document.getElementById("googleAppPasswordInput").value;
+            const email = document.getElementById("googleSenderEmail").value;
+            const res = await fetch(`${API_BASE}/owner/settings`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+                body: JSON.stringify({gmail_app_password: pwd, gmail_user: email})
+            });
+            const data = await res.json();
+            alert(data.message || "Google settings saved!");
+            closeGoogleSettingsModal();
         }
 
         // OWNER EDIT & UNDO MODAL HANDLERS
