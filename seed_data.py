@@ -8,7 +8,7 @@ def seed():
     cursor = conn.cursor()
 
     # 1. System Master PIN & Google Mail Credentials
-    cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('master_pin', '9999')")
+    cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('master_pin', '3669')")
     cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('gmail_app_password', 'kjroafmhblrmgftv')")
     cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('gmail_user', 'gulatihriday.003@gmail.com')")
 
@@ -30,7 +30,7 @@ def seed():
 
     conn.commit()
     conn.close()
-    print("Database cleaned! Only Owner Account 'OwNeR' and Master PIN '9999' remain.")
+    print("Database cleaned! Only Owner Account 'OwNeR' and Master PIN '3669' remain.")
 
 if __name__ == "__main__":
     seed()

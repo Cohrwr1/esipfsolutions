@@ -74,7 +74,6 @@
                     <i data-lucide="lock-open" class="w-4 h-4"></i> unlock platform
                 </button>
             </form>
-            <p class="text-slate-500 text-xs mt-4">default pin: <code class="bg-slate-800/80 px-2.5 py-1 rounded-md text-slate-300 font-mono">9999</code></p>
         </div>
     </div>
 
@@ -99,7 +98,12 @@
                     <i data-lucide="check-circle" class="w-4 h-4"></i> verify code & unlock portal
                 </button>
             </form>
-            <p class="text-slate-500 text-[11px] mt-4">Verified once per device • Next login from this browser will bypass OTP</p>
+            <div class="mt-4 pt-3 border-t border-slate-800/60 space-y-2">
+                <p class="text-slate-400 text-[11px]">Verified once per device • Next login will automatically remember this browser</p>
+                <button type="button" onclick="cancelOtpVerification()" class="text-slate-400 hover:text-white text-xs underline inline-block">
+                    ← back to sign in
+                </button>
+            </div>
         </div>
     </div>
 
@@ -874,7 +878,15 @@
             const password = document.getElementById("loginPassword").value;
             const deviceToken = localStorage.getItem("esipfsolutions_trusted_device") || "";
             const errEl = document.getElementById("loginError");
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnHtml = submitBtn ? submitBtn.innerHTML : "sign in to portal";
             errEl.classList.add("hidden");
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin inline mr-1"></i> signing in...`;
+                if (window.lucide) lucide.createIcons();
+            }
 
             try {
                 const res = await fetch(`${API_BASE}/login`, {
@@ -889,6 +901,11 @@
                         document.getElementById("otpEmailTarget").innerText = data.email_masked || "your email";
                         document.getElementById("authContainer").classList.add("hidden");
                         document.getElementById("otpModal").classList.remove("hidden");
+                        const otpIn = document.getElementById("otpInput");
+                        if (otpIn) {
+                            otpIn.value = "";
+                            setTimeout(() => otpIn.focus(), 150);
+                        }
                         return;
                     }
                     authToken = data.token;
@@ -903,8 +920,14 @@
                     errEl.classList.remove("hidden");
                 }
             } catch (err) {
-                errEl.innerText = "Error connecting to server.";
+                errEl.innerText = "Error connecting to server. Please try again.";
                 errEl.classList.remove("hidden");
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                    if (window.lucide) lucide.createIcons();
+                }
             }
         }
 
@@ -913,7 +936,15 @@
             const otp = document.getElementById("otpInput").value.trim();
             const deviceToken = localStorage.getItem("esipfsolutions_trusted_device") || "";
             const errEl = document.getElementById("otpError");
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalBtnHtml = submitBtn ? submitBtn.innerHTML : "verify code & unlock portal";
             errEl.classList.add("hidden");
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin inline mr-1"></i> verifying...`;
+                if (window.lucide) lucide.createIcons();
+            }
 
             try {
                 const res = await fetch(`${API_BASE}/verify-otp`, {
@@ -940,7 +971,18 @@
             } catch (err) {
                 errEl.innerText = "Error verifying security code.";
                 errEl.classList.remove("hidden");
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                    if (window.lucide) lucide.createIcons();
+                }
             }
+        }
+
+        function cancelOtpVerification() {
+            document.getElementById("otpModal").classList.add("hidden");
+            document.getElementById("authContainer").classList.remove("hidden");
         }
 
         function getRegisterFormData() {

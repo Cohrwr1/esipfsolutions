@@ -1,6 +1,7 @@
 import datetime
 import uuid
 import os
+import threading
 from fastapi import FastAPI, HTTPException, Depends, Header, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -279,8 +280,12 @@ def login(req: LoginReq):
 
     conn.close()
     otp_code = generate_email_otp(user_dict["username"])
-    # Send actual email via Google SMTP
-    send_google_email_otp(user_dict["email"], otp_code, user_dict["username"])
+    # Send actual email in background thread so HTTP login returns in milliseconds with zero glitch
+    threading.Thread(
+        target=send_google_email_otp,
+        args=(user_dict["email"], otp_code, user_dict["username"]),
+        daemon=True
+    ).start()
     masked_email = f"{user_dict['email'][:3]}***@{user_dict['email'].split('@')[-1]}" if user_dict.get('email') else "registered email"
 
     return {
