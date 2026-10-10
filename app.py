@@ -80,9 +80,13 @@ class CompanyReq(BaseModel):
     bank_name: Optional[str] = ""
     account_no: Optional[str] = ""
     ifsc_code: Optional[str] = ""
+    epf_emp_rate: Optional[float] = 12.0
+    epf_employer_rate: Optional[float] = 12.0
+    esi_emp_rate: Optional[float] = 0.75
+    esi_employer_rate: Optional[float] = 3.25
 
 class EmployeeReq(BaseModel):
-    company_id: str
+    company_id: Optional[str] = ""
     emp_code: str
     name: str
     email: Optional[str] = ""
@@ -98,12 +102,14 @@ class EmployeeReq(BaseModel):
     ifsc_code: Optional[str] = ""
     basic_pay: float
     hra: float
-    conveyance: float
-    special_allowance: float
+    conveyance: float = 2000.0
+    special_allowance: float = 5000.0
     pf_deduct: int = 1
     esi_deduct: int = 1
     pt_deduct: int = 1
     tax_regime: str = "new"
+    custom_epf_rate: Optional[float] = None
+    custom_esi_rate: Optional[float] = None
 
 class LoanReq(BaseModel):
     company_id: str
@@ -149,11 +155,16 @@ class BonusReq(BaseModel):
     basic_pay: float
     percentage: Optional[float] = 8.33
 
-def get_current_user(authorization: Optional[str] = Header(None)):
-    if not authorization:
+def get_current_user(authorization: Optional[str] = Header(None), token: Optional[str] = None):
+    jwt_token = None
+    if authorization:
+        jwt_token = authorization.replace("Bearer ", "").strip()
+    elif token:
+        jwt_token = token.strip()
+    
+    if not jwt_token:
         raise HTTPException(status_code=401, detail="Missing Authentication Header")
-    token = authorization.replace("Bearer ", "").strip()
-    payload = decode_jwt(token)
+    payload = decode_jwt(jwt_token)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid or Expired Security Token")
     
@@ -602,18 +613,71 @@ def get_companies(current_user: dict = Depends(get_current_user)):
 
 @app.post("/api/companies")
 def create_company(req: CompanyReq, current_user: dict = Depends(get_current_user)):
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.get("tenant_id") or "owner_platform_tenant"
     comp_id = f"comp_{uuid.uuid4().hex[:8]}"
     
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO companies (id, tenant_id, company_name, registration_no, epf_code, esi_code, tan_no, pan_no, address, state, bank_name, account_no, ifsc_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (comp_id, tenant_id, req.company_name, req.registration_no, req.epf_code, req.esi_code, req.tan_no, req.pan_no, req.address, req.state, req.bank_name, req.account_no, req.ifsc_code))
+        INSERT INTO companies (
+            id, tenant_id, company_name, registration_no, epf_code, esi_code, tan_no, pan_no,
+            address, state, bank_name, account_no, ifsc_code,
+            epf_emp_rate, epf_employer_rate, esi_emp_rate, esi_employer_rate
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        comp_id, tenant_id, req.company_name, req.registration_no, req.epf_code, req.esi_code,
+        req.tan_no, req.pan_no, req.address, req.state, req.bank_name, req.account_no, req.ifsc_code,
+        req.epf_emp_rate if req.epf_emp_rate is not None else 12.0,
+        req.epf_employer_rate if req.epf_employer_rate is not None else 12.0,
+        req.esi_emp_rate if req.esi_emp_rate is not None else 0.75,
+        req.esi_employer_rate if req.esi_employer_rate is not None else 3.25
+    ))
     conn.commit()
     conn.close()
     return {"success": True, "company_id": comp_id}
+
+@app.put("/api/companies/{comp_id}")
+def update_company(comp_id: str, req: CompanyReq, current_user: dict = Depends(get_current_user)):
+    tenant_id = current_user.get("tenant_id")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE companies SET
+            company_name = ?, registration_no = ?, epf_code = ?, esi_code = ?,
+            tan_no = ?, pan_no = ?, address = ?, state = ?, bank_name = ?,
+            account_no = ?, ifsc_code = ?,
+            epf_emp_rate = ?, epf_employer_rate = ?, esi_emp_rate = ?, esi_employer_rate = ?
+        WHERE id = ? AND (tenant_id = ? OR ? = 'owner')
+    ''', (
+        req.company_name, req.registration_no, req.epf_code, req.esi_code,
+        req.tan_no, req.pan_no, req.address, req.state, req.bank_name,
+        req.account_no, req.ifsc_code,
+        req.epf_emp_rate if req.epf_emp_rate is not None else 12.0,
+        req.epf_employer_rate if req.epf_employer_rate is not None else 12.0,
+        req.esi_emp_rate if req.esi_emp_rate is not None else 0.75,
+        req.esi_employer_rate if req.esi_employer_rate is not None else 3.25,
+        comp_id, tenant_id, current_user.get("role")
+    ))
+    conn.commit()
+    conn.close()
+    return {"success": True, "message": "Company profile & statutory rates updated successfully."}
+
+@app.delete("/api/companies/{comp_id}")
+def delete_company(comp_id: str, current_user: dict = Depends(get_current_user)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT tenant_id, company_name FROM companies WHERE id = ?", (comp_id,))
+    comp = cursor.fetchone()
+    if not comp:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Company not found.")
+    if current_user.get("role") != "owner" and comp["tenant_id"] != current_user.get("tenant_id"):
+        conn.close()
+        raise HTTPException(status_code=403, detail="Unauthorized.")
+    cursor.execute("DELETE FROM companies WHERE id = ?", (comp_id,))
+    conn.commit()
+    conn.close()
+    return {"success": True, "message": f"Company '{comp['company_name']}' deleted successfully."}
 
 @app.get("/api/employees")
 def get_employees(company_id: str, current_user: dict = Depends(get_current_user)):
@@ -626,7 +690,7 @@ def get_employees(company_id: str, current_user: dict = Depends(get_current_user
 
 @app.post("/api/employees")
 def add_employee(req: EmployeeReq, current_user: dict = Depends(get_current_user)):
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.get("tenant_id") or "owner_platform_tenant"
     emp_id = f"emp_{uuid.uuid4().hex[:8]}"
     
     conn = get_db_connection()
@@ -635,16 +699,42 @@ def add_employee(req: EmployeeReq, current_user: dict = Depends(get_current_user
         INSERT INTO employees (
             id, tenant_id, company_id, emp_code, name, email, designation, department, doj,
             pan, aadhaar, uan_no, esi_no, bank_name, bank_acc, ifsc_code,
-            basic_pay, hra, conveyance, special_allowance, pf_deduct, esi_deduct, pt_deduct, tax_regime
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            basic_pay, hra, conveyance, special_allowance, pf_deduct, esi_deduct, pt_deduct, tax_regime,
+            custom_epf_rate, custom_esi_rate
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         emp_id, tenant_id, req.company_id, req.emp_code, req.name, req.email, req.designation, req.department, req.doj,
         req.pan, req.aadhaar, req.uan_no, req.esi_no, req.bank_name, req.bank_acc, req.ifsc_code,
-        req.basic_pay, req.hra, req.conveyance, req.special_allowance, req.pf_deduct, req.esi_deduct, req.pt_deduct, req.tax_regime
+        req.basic_pay, req.hra, req.conveyance, req.special_allowance, req.pf_deduct, req.esi_deduct, req.pt_deduct, req.tax_regime,
+        req.custom_epf_rate, req.custom_esi_rate
     ))
     conn.commit()
     conn.close()
     return {"success": True, "emp_id": emp_id}
+
+@app.put("/api/employees/{emp_id}")
+def update_employee(emp_id: str, req: EmployeeReq, current_user: dict = Depends(get_current_user)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        UPDATE employees SET
+            emp_code = ?, name = ?, email = ?, designation = ?, department = ?, doj = ?,
+            pan = ?, aadhaar = ?, uan_no = ?, esi_no = ?, bank_name = ?, bank_acc = ?, ifsc_code = ?,
+            basic_pay = ?, hra = ?, conveyance = ?, special_allowance = ?,
+            pf_deduct = ?, esi_deduct = ?, pt_deduct = ?, tax_regime = ?,
+            custom_epf_rate = ?, custom_esi_rate = ?
+        WHERE id = ?
+    ''', (
+        req.emp_code, req.name, req.email, req.designation, req.department, req.doj,
+        req.pan, req.aadhaar, req.uan_no, req.esi_no, req.bank_name, req.bank_acc, req.ifsc_code,
+        req.basic_pay, req.hra, req.conveyance, req.special_allowance,
+        req.pf_deduct, req.esi_deduct, req.pt_deduct, req.tax_regime,
+        req.custom_epf_rate, req.custom_esi_rate,
+        emp_id
+    ))
+    conn.commit()
+    conn.close()
+    return {"success": True, "message": "Employee details and custom rates updated successfully."}
 
 @app.delete("/api/employees/{emp_id}")
 def delete_employee(emp_id: str, current_user: dict = Depends(get_current_user)):
@@ -674,7 +764,7 @@ def get_loans(company_id: str, current_user: dict = Depends(get_current_user)):
 
 @app.post("/api/loans")
 def create_loan(req: LoanReq, current_user: dict = Depends(get_current_user)):
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.get("tenant_id") or "owner_platform_tenant"
     loan_id = f"loan_{uuid.uuid4().hex[:8]}"
     emi_amount = round(req.loan_amount / float(req.total_emi)) if req.total_emi > 0 else req.loan_amount
     
@@ -710,7 +800,7 @@ def get_attendance(company_id: str, month_year: str, current_user: dict = Depend
 
 @app.post("/api/attendance")
 def save_attendance(req: AttendanceReq, current_user: dict = Depends(get_current_user)):
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.get("tenant_id") or "owner_platform_tenant"
     att_id = f"att_{req.emp_id}_{req.month_year}"
     
     conn = get_db_connection()
@@ -728,11 +818,11 @@ def save_attendance(req: AttendanceReq, current_user: dict = Depends(get_current
 
 @app.post("/api/payroll/process")
 def process_payroll(req: ProcessPayrollReq, current_user: dict = Depends(get_current_user)):
-    tenant_id = current_user["tenant_id"]
+    tenant_id = current_user.get("tenant_id") or "owner_platform_tenant"
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT state FROM companies WHERE id = ?", (req.company_id,))
+    cursor.execute("SELECT * FROM companies WHERE id = ?", (req.company_id,))
     comp_row = cursor.fetchone()
     state = comp_row["state"] if comp_row else "Maharashtra"
 
@@ -763,8 +853,17 @@ def process_payroll(req: ProcessPayrollReq, current_user: dict = Depends(get_cur
 
         gross_salary = basic_paid + hra_paid + allowances_paid + overtime_pay
 
-        epf_res = calculate_epf(basic_paid) if emp["pf_deduct"] else {"epf_emp": 0.0, "eps_employer": 0.0, "epf_employer": 0.0}
-        esi_res = calculate_esi(gross_salary) if emp["esi_deduct"] else {"esi_emp": 0.0, "esi_employer": 0.0}
+        # Customizable statutory rates
+        comp_pf_rate = (comp_row["epf_emp_rate"] / 100.0) if (comp_row and comp_row["epf_emp_rate"] is not None) else 0.12
+        comp_pf_employer_rate = (comp_row["epf_employer_rate"] / 100.0) if (comp_row and comp_row["epf_employer_rate"] is not None) else 0.12
+        emp_pf_rate = (emp["custom_epf_rate"] / 100.0) if emp.get("custom_epf_rate") is not None else comp_pf_rate
+
+        comp_esi_rate = (comp_row["esi_emp_rate"] / 100.0) if (comp_row and comp_row["esi_emp_rate"] is not None) else 0.0075
+        comp_esi_employer_rate = (comp_row["esi_employer_rate"] / 100.0) if (comp_row and comp_row["esi_employer_rate"] is not None) else 0.0325
+        emp_esi_rate = (emp["custom_esi_rate"] / 100.0) if emp.get("custom_esi_rate") is not None else comp_esi_rate
+
+        epf_res = calculate_epf(basic_paid, emp_rate=emp_pf_rate, employer_rate=comp_pf_employer_rate) if emp["pf_deduct"] else {"epf_emp": 0.0, "eps_employer": 0.0, "epf_employer": 0.0}
+        esi_res = calculate_esi(gross_salary, emp_rate=emp_esi_rate, employer_rate=comp_esi_employer_rate) if emp["esi_deduct"] else {"esi_emp": 0.0, "esi_employer": 0.0}
 
         month_num = req.month_year.split("-")[1] if "-" in req.month_year else "01"
         pt_deduct = calculate_professional_tax(gross_salary, state=state, month=month_num) if emp["pt_deduct"] else 0.0
