@@ -1,5 +1,5 @@
 import datetime
-from database import get_db_connection
+from database import get_db_connection, auto_backup_state
 
 PRICING_TIERS = {
     "6_months": {"name": "6 Months Subscription", "price": 12000.0, "days": 180},
@@ -87,6 +87,7 @@ def owner_lock_tenant(tenant_id: str):
     conn.cursor().execute("UPDATE tenants SET subscription_status = 'locked' WHERE id = ?", (tenant_id,))
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "message": f"Tenant locked successfully by Owner."}
 
 def owner_unlock_tenant(tenant_id: str):
@@ -94,6 +95,7 @@ def owner_unlock_tenant(tenant_id: str):
     conn.cursor().execute("UPDATE tenants SET subscription_status = 'active' WHERE id = ?", (tenant_id,))
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "message": f"Tenant unlocked successfully by Owner."}
 
 def owner_extend_subscription(tenant_id: str, days: int):
@@ -111,6 +113,7 @@ def owner_extend_subscription(tenant_id: str, days: int):
     cursor.execute("UPDATE tenants SET expiry_date = ?, subscription_status = 'active' WHERE id = ?", (str(new_exp), tenant_id))
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "new_expiry": str(new_exp)}
 
 def owner_convert_to_lifetime(tenant_id: str):
@@ -121,6 +124,7 @@ def owner_convert_to_lifetime(tenant_id: str):
     )
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "message": "Tenant upgraded to Lifetime License (₹50,000)."}
 
 def owner_update_tenant(tenant_id: str, name: str, email: str, phone: str, plan_type: str, status: str, expiry_date: str, price_paid: float):
@@ -145,6 +149,7 @@ def owner_update_tenant(tenant_id: str, name: str, email: str, phone: str, plan_
     
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "message": f"Tenant '{name}' details updated successfully."}
 
 def owner_undo_tenant_update(tenant_id: str):
@@ -175,6 +180,7 @@ def owner_undo_tenant_update(tenant_id: str):
     
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "message": f"Undid last edit. Restored '{backup['name']}' to previous state."}
 
 def owner_delete_tenant(tenant_id: str):
@@ -184,6 +190,7 @@ def owner_delete_tenant(tenant_id: str):
     cursor.execute("DELETE FROM users WHERE tenant_id = ?", (tenant_id,))
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "message": "Tenant organization and user accounts permanently deleted."}
 
 def owner_approve_request(tenant_id: str):
@@ -210,6 +217,7 @@ def owner_approve_request(tenant_id: str):
     """, (str(today), str(expiry), price, tenant_id))
     conn.commit()
     conn.close()
+    auto_backup_state()
 
     try:
         from security import send_account_approved_email
@@ -230,6 +238,7 @@ def owner_decline_request(tenant_id: str):
     cursor.execute("DELETE FROM tenants WHERE id = ?", (tenant_id,))
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "message": f"Access request for '{name}' was declined and removed."}
 
 def get_owner_dashboard_summary():

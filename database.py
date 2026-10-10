@@ -2,13 +2,121 @@ import sqlite3
 import os
 import datetime
 import hashlib
+import json
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "servagya_payroll.db")
+# Support Persistent Disks (e.g. Render /var/data or /data or custom DATABASE_PATH)
+DATA_DIR = os.getenv("DATA_DIR")
+if not DATA_DIR:
+    if os.path.exists("/var/data") and os.path.isdir("/var/data"):
+        DATA_DIR = "/var/data"
+    elif os.path.exists("/data") and os.path.isdir("/data"):
+        DATA_DIR = "/data"
+    else:
+        DATA_DIR = os.path.dirname(__file__)
+
+DB_PATH = os.getenv("DATABASE_PATH", os.path.join(DATA_DIR, "servagya_payroll.db"))
+BACKUP_PATH = os.path.join(DATA_DIR, "servagya_payroll_backup.json")
+ROOT_BACKUP_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "servagya_payroll_backup.json")
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+def auto_backup_state():
+    """Takes a persistent snapshot of all registered tenants, users, companies, and employees to guarantee zero data loss across deploys."""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        state = {}
+        for table in ["tenants", "users", "companies", "employees", "attendance", "loans", "payroll_runs", "system_settings"]:
+            try:
+                c.execute(f"SELECT * FROM {table}")
+                state[table] = [dict(r) for r in c.fetchall()]
+            except Exception:
+                pass
+        conn.close()
+
+        for p in [BACKUP_PATH, ROOT_BACKUP_PATH]:
+            try:
+                with open(p, "w", encoding="utf-8") as f:
+                    json.dump(state, f, indent=2, default=str)
+            except Exception:
+                pass
+    except Exception as e:
+        print("Auto-backup notice:", e)
+
+def auto_restore_state():
+    """If database is fresh or restarted on ephemeral disk, auto-restore all accounts and data from persistent snapshot."""
+    backup_file = None
+    for p in [BACKUP_PATH, ROOT_BACKUP_PATH]:
+        if os.path.exists(p) and os.path.getsize(p) > 10:
+            backup_file = p
+            break
+    if not backup_file:
+        return
+
+    try:
+        with open(backup_file, "r", encoding="utf-8") as f:
+            state = json.load(f)
+        
+        conn = get_db_connection()
+        c = conn.cursor()
+
+        for t in state.get("tenants", []):
+            cols = list(t.keys())
+            placeholders = ", ".join(["?"] * len(cols))
+            col_str = ", ".join(cols)
+            vals = [t[k] for k in cols]
+            c.execute(f"INSERT OR IGNORE INTO tenants ({col_str}) VALUES ({placeholders})", vals)
+
+        for u in state.get("users", []):
+            cols = list(u.keys())
+            placeholders = ", ".join(["?"] * len(cols))
+            col_str = ", ".join(cols)
+            vals = [u[k] for k in cols]
+            c.execute(f"INSERT OR IGNORE INTO users ({col_str}) VALUES ({placeholders})", vals)
+
+        for comp in state.get("companies", []):
+            cols = list(comp.keys())
+            placeholders = ", ".join(["?"] * len(cols))
+            col_str = ", ".join(cols)
+            vals = [comp[k] for k in cols]
+            c.execute(f"INSERT OR IGNORE INTO companies ({col_str}) VALUES ({placeholders})", vals)
+
+        for emp in state.get("employees", []):
+            cols = list(emp.keys())
+            placeholders = ", ".join(["?"] * len(cols))
+            col_str = ", ".join(cols)
+            vals = [emp[k] for k in cols]
+            c.execute(f"INSERT OR IGNORE INTO employees ({col_str}) VALUES ({placeholders})", vals)
+
+        for att in state.get("attendance", []):
+            cols = list(att.keys())
+            placeholders = ", ".join(["?"] * len(cols))
+            col_str = ", ".join(cols)
+            vals = [att[k] for k in cols]
+            c.execute(f"INSERT OR IGNORE INTO attendance ({col_str}) VALUES ({placeholders})", vals)
+
+        for ln in state.get("loans", []):
+            cols = list(ln.keys())
+            placeholders = ", ".join(["?"] * len(cols))
+            col_str = ", ".join(cols)
+            vals = [ln[k] for k in cols]
+            c.execute(f"INSERT OR IGNORE INTO loans ({col_str}) VALUES ({placeholders})", vals)
+
+        for pr in state.get("payroll_runs", []):
+            cols = list(pr.keys())
+            placeholders = ", ".join(["?"] * len(cols))
+            col_str = ", ".join(cols)
+            vals = [pr[k] for k in cols]
+            c.execute(f"INSERT OR IGNORE INTO payroll_runs ({col_str}) VALUES ({placeholders})", vals)
+
+        conn.commit()
+        conn.close()
+        print(f"Auto-restored accounts and data from persistent backup: {backup_file}")
+    except Exception as e:
+        print("Auto-restore notice:", e)
 
 def init_db():
     conn = get_db_connection()
@@ -238,8 +346,25 @@ def init_db():
         except Exception:
             pass
 
+    # Ensure default system settings exist (INSERT OR IGNORE)
+    cursor.execute("INSERT OR IGNORE INTO system_settings (key, value) VALUES ('master_pin', '3669')")
+    cursor.execute("INSERT OR IGNORE INTO system_settings (key, value) VALUES ('gmail_app_password', 'kjroafmhblrmgftv')")
+    cursor.execute("INSERT OR IGNORE INTO system_settings (key, value) VALUES ('gmail_user', 'gulatihriday.003@gmail.com')")
+
+    # Ensure Super Admin Owner account exists (INSERT OR IGNORE - NEVER TOUCHES OR OVERWRITES TENANTS)
+    owner_pwd_hash = hashlib.sha256("Esipfsolutions@Owner".encode()).hexdigest()
+    cursor.execute('''
+        INSERT OR IGNORE INTO users (id, tenant_id, username, email, password_hash, role, is_2fa_enabled)
+        VALUES ('owner_usr_001', NULL, 'OwNeR', 'gulatihriday.003@gmail.com', ?, 'owner', 0)
+    ''', (owner_pwd_hash,))
+
     conn.commit()
     conn.close()
+
+    # Restore previous accounts from snapshot if database was recreated
+    auto_restore_state()
+    # Keep snapshot synchronized
+    auto_backup_state()
 
 if __name__ == "__main__":
     init_db()

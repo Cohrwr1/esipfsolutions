@@ -63,8 +63,7 @@ from fastapi.responses import HTMLResponse, FileResponse, Response
 from pydantic import BaseModel
 from typing import Optional, List
 
-from database import get_db_connection, init_db
-from seed_data import seed
+from database import get_db_connection, init_db, auto_backup_state
 from security import (
     hash_password, verify_password, generate_jwt, decode_jwt,
     generate_totp_secret, verify_totp, MASTER_PIN_DEFAULT,
@@ -97,10 +96,6 @@ app.add_middleware(
 @app.on_event("startup")
 def startup():
     init_db()
-    try:
-        seed()
-    except Exception as e:
-        print("Startup seed notice:", e)
 
 # Request Models
 class PinVerifyReq(BaseModel):
@@ -629,6 +624,7 @@ def register_tenant(req: RegisterTenantReq):
         raise HTTPException(status_code=400, detail=f"Registration failed: {str(e)}")
     
     conn.close()
+    auto_backup_state()
     return {
         "success": True,
         "message": resp_msg,
@@ -821,6 +817,7 @@ def create_company(req: CompanyReq, current_user: dict = Depends(get_current_use
     ))
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "company_id": comp_id, "id": comp_id, "message": "Company created successfully"}
 
 @app.put("/api/companies/{comp_id}")
@@ -847,6 +844,7 @@ def update_company(comp_id: str, req: CompanyReq, current_user: dict = Depends(g
     ))
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "message": "Company profile & statutory rates updated successfully."}
 
 @app.delete("/api/companies/{comp_id}")
@@ -864,6 +862,7 @@ def delete_company(comp_id: str, current_user: dict = Depends(get_current_user))
     cursor.execute("DELETE FROM companies WHERE id = ?", (comp_id,))
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "message": f"Company '{comp['company_name']}' deleted successfully."}
 
 @app.get("/api/employees")
@@ -909,6 +908,7 @@ def add_employee(req: EmployeeReq, current_user: dict = Depends(get_current_user
     ))
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "emp_id": emp_id}
 
 @app.put("/api/employees/{emp_id}")
@@ -933,6 +933,7 @@ def update_employee(emp_id: str, req: EmployeeReq, current_user: dict = Depends(
     ))
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "message": "Employee details and custom rates updated successfully."}
 
 @app.delete("/api/employees/{emp_id}")
@@ -942,6 +943,7 @@ def delete_employee(emp_id: str, current_user: dict = Depends(get_current_user))
     cursor.execute("DELETE FROM employees WHERE id = ?", (emp_id,))
     conn.commit()
     conn.close()
+    auto_backup_state()
     return {"success": True, "message": "Employee record removed."}
 
 # --- 4. Loans & Statutory Calculators ---
