@@ -19,12 +19,27 @@ try:
 except ImportError:
     razorpay = None
 
+def get_razorpay_config():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT key, value FROM system_settings WHERE key IN ('razorpay_key_id', 'razorpay_key_secret')")
+        db_vals = {r["key"]: r["value"] for r in cursor.fetchall()}
+        conn.close()
+    except Exception:
+        db_vals = {}
+
+    key_id = db_vals.get("razorpay_key_id") or os.getenv("RAZORPAY_KEY_ID")
+    key_secret = db_vals.get("razorpay_key_secret") or os.getenv("RAZORPAY_KEY_SECRET")
+    return key_id, key_secret
+
 def get_razorpay_client():
-    if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
-        raise HTTPException(status_code=500, detail="Razorpay credentials not configured in environment variables.")
+    key_id, key_secret = get_razorpay_config()
+    if not key_id or not key_secret:
+        raise HTTPException(status_code=500, detail="Razorpay credentials not configured. Please configure in Owner Settings or .env file.")
     if not razorpay:
         raise HTTPException(status_code=500, detail="Razorpay Python SDK is not installed.")
-    return razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+    return razorpay.Client(auth=(key_id, key_secret))
 
 from fastapi import FastAPI, HTTPException, Depends, Header, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -481,12 +496,13 @@ def create_payment_order(req: PaymentOrderReq):
             raise HTTPException(status_code=401, detail="Razorpay Authentication Failed. Invalid Key ID or Secret.")
         raise HTTPException(status_code=500, detail=f"Razorpay order creation failed: {err_msg}")
 
+    key_id, _ = get_razorpay_config()
     return {
         "success": True,
         "order_id": order["id"],
         "amount": order["amount"],
         "currency": order["currency"],
-        "key_id": RAZORPAY_KEY_ID
+        "key_id": key_id
     }
 
 @app.post("/api/verify-payment")
@@ -502,13 +518,14 @@ def verify_payment(req: PaymentVerifyReq):
             detail="Missing required fields for payment verification: order_id, payment_id, and signature are required."
         )
 
-    if not RAZORPAY_KEY_SECRET:
-        raise HTTPException(status_code=500, detail="RAZORPAY_KEY_SECRET is not configured on the server.")
+    _, key_secret = get_razorpay_config()
+    if not key_secret:
+        raise HTTPException(status_code=500, detail="Razorpay secret key is not configured on the server.")
 
     # Algorithm: HMAC-SHA256(order_id + "|" + payment_id, KEY_SECRET)
     message = f"{order_id}|{payment_id}".encode("utf-8")
     generated_signature = hmac.new(
-        RAZORPAY_KEY_SECRET.encode("utf-8"),
+        key_secret.encode("utf-8"),
         message,
         hashlib.sha256
     ).hexdigest()
@@ -559,10 +576,11 @@ def register_tenant(req: RegisterTenantReq):
             raise HTTPException(status_code=400, detail="Razorpay payment verification is required to activate subscription directly.")
         # If signature and order_id are provided, verify signature
         if req.order_id and req.signature:
-            if not RAZORPAY_KEY_SECRET:
-                raise HTTPException(status_code=500, detail="RAZORPAY_KEY_SECRET is not configured on the server.")
+            _, key_secret = get_razorpay_config()
+            if not key_secret:
+                raise HTTPException(status_code=500, detail="Razorpay secret key is not configured on the server.")
             message = f"{req.order_id}|{req.payment_id}".encode("utf-8")
-            gen_sig = hmac.new(RAZORPAY_KEY_SECRET.encode("utf-8"), message, hashlib.sha256).hexdigest()
+            gen_sig = hmac.new(key_secret.encode("utf-8"), message, hashlib.sha256).hexdigest()
             if not hmac.compare_digest(gen_sig, req.signature):
                 raise HTTPException(status_code=400, detail="Payment signature verification failed. Registration blocked.")
         status = "active"
@@ -607,6 +625,8 @@ class OwnerSettingsReq(BaseModel):
     gmail_app_password: Optional[str] = None
     gmail_user: Optional[str] = None
     google_script_url: Optional[str] = None
+    razorpay_key_id: Optional[str] = None
+    razorpay_key_secret: Optional[str] = None
 
 @app.post("/api/owner/approve-request")
 def approve_request(req: OwnerActionReq, current_user: dict = Depends(get_current_user)):
@@ -632,9 +652,13 @@ def update_owner_settings(req: OwnerSettingsReq, current_user: dict = Depends(ge
         cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('gmail_user', ?)", (req.gmail_user.strip(),))
     if req.google_script_url is not None:
         cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('google_script_url', ?)", (req.google_script_url.strip(),))
+    if req.razorpay_key_id is not None:
+        cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('razorpay_key_id', ?)", (req.razorpay_key_id.strip(),))
+    if req.razorpay_key_secret is not None:
+        cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('razorpay_key_secret', ?)", (req.razorpay_key_secret.strip(),))
     conn.commit()
     conn.close()
-    return {"success": True, "message": "Settings updated successfully."}
+    return {"success": True, "message": "Platform & Gateway settings updated successfully."}
 
 @app.get("/api/owner/settings")
 def get_owner_settings(current_user: dict = Depends(get_current_user)):
@@ -642,12 +666,16 @@ def get_owner_settings(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Owner privileges required.")
     from security import get_email_settings
     settings = get_email_settings()
+    key_id, key_secret = get_razorpay_config()
     return {
         "gmail_user": settings["email_user"],
         "has_app_pwd": bool(settings["app_pwd"]),
         "has_script_url": bool(settings["script_url"]),
         "script_url": settings["script_url"],
-        "has_resend_key": bool(settings["resend_key"])
+        "has_resend_key": bool(settings["resend_key"]),
+        "razorpay_key_id": key_id or "",
+        "has_razorpay_secret": bool(key_secret),
+        "razorpay_mode": "Test Mode" if (key_id and key_id.startswith("rzp_test")) else ("Live Mode" if key_id else "Not Configured")
     }
 
 @app.post("/api/owner/test-email")
@@ -657,6 +685,35 @@ def test_email_endpoint(req: dict, current_user: dict = Depends(get_current_user
     to_email = req.get("email", current_user.get("email", "gulatihriday.003@gmail.com"))
     res = send_google_email_otp(to_email, "777888", "test_user")
     return res
+
+@app.post("/api/owner/test-razorpay")
+def test_razorpay_endpoint(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "owner":
+        raise HTTPException(status_code=403, detail="Owner privileges required.")
+    key_id, key_secret = get_razorpay_config()
+    if not key_id or not key_secret:
+        return {"success": False, "message": "Razorpay Key ID or Key Secret is not configured."}
+    if not razorpay:
+        return {"success": False, "message": "Razorpay Python SDK is not installed."}
+    try:
+        client = razorpay.Client(auth=(key_id, key_secret))
+        order = client.order.create({
+            "amount": 100,
+            "currency": "INR",
+            "receipt": f"test_auth_{uuid.uuid4().hex[:6]}"
+        })
+        is_test = key_id.startswith("rzp_test")
+        return {
+            "success": True,
+            "mode": "Test Mode" if is_test else "Live Mode",
+            "key_id": key_id,
+            "message": f"Successfully connected to Razorpay ({'Test Mode' if is_test else 'Live Mode'})! Key pair is 100% active and verified."
+        }
+    except Exception as e:
+        err_msg = str(e)
+        if "Authentication failed" in err_msg or "auth" in err_msg.lower() or "401" in err_msg:
+            return {"success": False, "message": "Authentication failed: Invalid Key ID or Secret. Please check your keys in Razorpay Dashboard."}
+        return {"success": False, "message": f"Razorpay API error: {err_msg}"}
 
 # --- 2. Owner Super Admin API (Edit / Undo / Controls) ---
 
