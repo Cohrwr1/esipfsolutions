@@ -541,7 +541,7 @@ def verify_payment(req: PaymentVerifyReq):
         conn = get_db_connection()
         cursor = conn.cursor()
         today = datetime.date.today()
-        price_map = {"6_months": 12000.0, "1_year": 20000.0, "lifetime": 50000.0}
+        price_map = {"test_verify": 1.0, "6_months": 12000.0, "1_year": 20000.0, "lifetime": 50000.0}
         price = price_map.get(req.plan_type, 20000.0) if req.plan_type else 20000.0
         cursor.execute(
             "UPDATE tenants SET subscription_status = 'active', start_date = ?, price_paid = ? WHERE id = ?",
@@ -563,8 +563,8 @@ def register_tenant(req: RegisterTenantReq):
     tenant_id = f"t_{uuid.uuid4().hex[:8]}"
     user_id = f"usr_{uuid.uuid4().hex[:8]}"
     
-    price_map = {"6_months": 12000.0, "1_year": 20000.0, "lifetime": 50000.0}
-    days_map = {"6_months": 180, "1_year": 365, "lifetime": 36500}
+    price_map = {"test_verify": 1.0, "6_months": 12000.0, "1_year": 20000.0, "lifetime": 50000.0}
+    days_map = {"test_verify": 30, "6_months": 180, "1_year": 365, "lifetime": 36500}
 
     price = price_map.get(req.plan_type, 20000.0)
     days = days_map.get(req.plan_type, 365)
