@@ -12,25 +12,15 @@ def seed():
     cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('gmail_app_password', 'kjroafmhblrmgftv')")
     cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('gmail_user', 'gulatihriday.003@gmail.com')")
 
-    # 2. Clear out all sample demo data
-    cursor.execute("DELETE FROM users WHERE role != 'owner'")
-    cursor.execute("DELETE FROM tenants")
-    cursor.execute("DELETE FROM companies")
-    cursor.execute("DELETE FROM employees")
-    cursor.execute("DELETE FROM loans")
-    cursor.execute("DELETE FROM attendance")
-    cursor.execute("DELETE FROM payroll_runs")
-    cursor.execute("DELETE FROM tenant_backups")
-
-    # 3. Create Clean Owner Super Admin Account ONLY
+    # 2. Ensure Clean Owner Super Admin Account exists without touching tenant accounts
     cursor.execute('''
-        INSERT OR REPLACE INTO users (id, tenant_id, username, email, password_hash, role, is_2fa_enabled)
+        INSERT OR IGNORE INTO users (id, tenant_id, username, email, password_hash, role, is_2fa_enabled)
         VALUES ('owner_usr_001', NULL, 'OwNeR', 'gulatihriday.003@gmail.com', ?, 'owner', 0)
     ''', (hash_password("Esipfsolutions@Owner"),))
 
     conn.commit()
     conn.close()
-    print("Database cleaned! Only Owner Account 'OwNeR' and Master PIN '3669' remain.")
+    print("Database verified: Owner account and system settings initialized. User accounts preserved.")
 
 if __name__ == "__main__":
     seed()
