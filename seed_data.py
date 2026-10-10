@@ -7,8 +7,10 @@ def seed():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # 1. System Master PIN
+    # 1. System Master PIN & Google Mail Credentials
     cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('master_pin', '9999')")
+    cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('gmail_app_password', 'kjroafmhblrmgftv')")
+    cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('gmail_user', 'gulatihriday.003@gmail.com')")
 
     # 2. Clear out all sample demo data
     cursor.execute("DELETE FROM users WHERE role != 'owner'")
