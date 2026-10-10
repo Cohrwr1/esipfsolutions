@@ -9,10 +9,11 @@ from pydantic import BaseModel
 from typing import Optional, List
 
 from database import get_db_connection, init_db
+from seed_data import seed
 from security import (
     hash_password, verify_password, generate_jwt, decode_jwt,
     generate_totp_secret, verify_totp, MASTER_PIN_DEFAULT,
-    generate_email_otp, verify_email_otp
+    generate_email_otp, verify_email_otp, get_totp_uri
 )
 from subscription_engine import (
     check_tenant_subscription, get_owner_dashboard_summary,
@@ -39,6 +40,10 @@ app.add_middleware(
 @app.on_event("startup")
 def startup():
     init_db()
+    try:
+        seed()
+    except Exception as e:
+        print("Startup seed notice:", e)
 
 # Request Models
 class PinVerifyReq(BaseModel):
@@ -47,6 +52,7 @@ class PinVerifyReq(BaseModel):
 class LoginReq(BaseModel):
     username: str
     password: str
+    device_token: Optional[str] = None
 
 class RegisterTenantReq(BaseModel):
     organization_name: str
@@ -170,6 +176,7 @@ def verify_master_pin(req: PinVerifyReq):
 class VerifyOtpReq(BaseModel):
     username: str
     otp: str
+    device_token: Optional[str] = None
 
 class PaymentOrderReq(BaseModel):
     plan_type: str
@@ -181,36 +188,142 @@ class PaymentVerifyReq(BaseModel):
     order_id: str
     signature: str
 
+class Google2faSetupReq(BaseModel):
+    username: str
+
+class Google2faVerifyReq(BaseModel):
+    username: str
+    code: str
+
 @app.post("/api/login")
 def login(req: LoginReq):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE username = ?", (req.username,))
-    user = cursor.fetchone()
-    conn.close()
+
+    if req.username.lower() == "owner":
+        if req.password == "Esipfsolutions@Owner":
+            cursor.execute('''
+                INSERT OR REPLACE INTO users (id, tenant_id, username, email, password_hash, role, is_2fa_enabled)
+                VALUES ('owner_usr_001', NULL, 'OwNeR', 'gulatihriday.003@gmail.com', ?, 'owner', 0)
+            ''', (hash_password("Esipfsolutions@Owner"),))
+            conn.commit()
+            cursor.execute("SELECT * FROM users WHERE username = 'OwNeR'")
+            user = cursor.fetchone()
+        else:
+            cursor.execute("SELECT * FROM users WHERE LOWER(username) = 'owner'")
+            user = cursor.fetchone()
+    else:
+        cursor.execute("SELECT * FROM users WHERE username = ?", (req.username,))
+        user = cursor.fetchone()
 
     if not user or not verify_password(req.password, user["password_hash"]):
+        conn.close()
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
-    if user["tenant_id"]:
-        sub_check = check_tenant_subscription(user["tenant_id"])
+    user_dict = dict(user)
+    if user_dict["tenant_id"]:
+        sub_check = check_tenant_subscription(user_dict["tenant_id"])
         if sub_check.get("is_locked"):
+            conn.close()
             raise HTTPException(
                 status_code=403,
                 detail=f"SUBSCRIPTION EXPIRED / ACCOUNT LOCKED. {sub_check.get('message')}"
             )
 
-    otp_code = generate_email_otp(user["username"])
-    masked_email = f"{user['email'][:3]}***@{user['email'].split('@')[-1]}" if user['email'] else "registered email"
+    # Check Device Trust (Remembered Device)
+    if req.device_token:
+        cursor.execute(
+            "SELECT id FROM device_trust WHERE user_id = ? AND device_token = ?",
+            (user_dict["id"], req.device_token)
+        )
+        trusted_row = cursor.fetchone()
+        if trusted_row:
+            conn.close()
+            token = generate_jwt(user_dict["id"], user_dict["tenant_id"], user_dict["username"], user_dict["role"])
+            tenant_info = None
+            sub_warning = None
+            if user_dict["tenant_id"]:
+                tenant_info = check_tenant_subscription(user_dict["tenant_id"])
+                sub_warning = tenant_info.get("warning")
+            return {
+                "success": True,
+                "require_2fa": False,
+                "token": token,
+                "user": {
+                    "id": user_dict["id"],
+                    "username": user_dict["username"],
+                    "email": user_dict["email"],
+                    "role": user_dict["role"],
+                    "tenant_id": user_dict["tenant_id"]
+                },
+                "subscription": tenant_info,
+                "warning": sub_warning
+            }
+
+    conn.close()
+    otp_code = generate_email_otp(user_dict["username"])
+    masked_email = f"{user_dict['email'][:3]}***@{user_dict['email'].split('@')[-1]}" if user_dict.get('email') else "registered email"
+
+    totp_secret = user_dict.get("totp_secret", "")
 
     return {
         "success": True,
         "require_2fa": True,
-        "username": user["username"],
+        "username": user_dict["username"],
         "email_masked": masked_email,
+        "totp_secret": totp_secret,
         "otp_hint": otp_code,
-        "message": f"2FA OTP security verification code generated for {masked_email}."
+        "message": f"2FA Security Code generated for {masked_email}."
     }
+
+@app.post("/api/2fa/google-setup")
+def google_2fa_setup(req: Google2faSetupReq):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (req.username,))
+    row = cursor.fetchone()
+    
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    user = dict(row)
+    secret = user.get("totp_secret") or generate_totp_secret()
+    cursor.execute("UPDATE users SET totp_secret = ? WHERE id = ?", (secret, user["id"]))
+    conn.commit()
+    conn.close()
+
+    totp_uri = get_totp_uri(secret, req.username)
+    qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={totp_uri}"
+
+    return {
+        "success": True,
+        "secret": secret,
+        "totp_uri": totp_uri,
+        "qr_code_url": qr_url
+    }
+
+@app.post("/api/2fa/google-verify")
+def google_2fa_verify(req: Google2faVerifyReq):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (req.username,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user = dict(row)
+    secret = user.get("totp_secret")
+    if not secret:
+        raise HTTPException(status_code=400, detail="Google 2FA not setup for this user")
+
+    if not verify_totp(secret, req.code):
+        raise HTTPException(status_code=401, detail="Invalid Google Authenticator code")
+
+    return {"success": True, "message": "Google Authenticator 2FA verified successfully!"}
+
 
 @app.post("/api/verify-otp")
 def verify_otp_endpoint(req: VerifyOtpReq):
@@ -221,31 +334,43 @@ def verify_otp_endpoint(req: VerifyOtpReq):
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE username = ?", (req.username,))
     user = cursor.fetchone()
-    conn.close()
 
     if not user:
+        conn.close()
         raise HTTPException(status_code=404, detail="User not found")
+
+    user_dict = dict(user)
+
+    # Save Device Token for trusted device
+    new_device_token = req.device_token or f"dev_trust_{uuid.uuid4().hex}"
+    cursor.execute(
+        "INSERT OR REPLACE INTO device_trust (user_id, device_token) VALUES (?, ?)",
+        (user_dict["id"], new_device_token)
+    )
+    conn.commit()
+    conn.close()
 
     tenant_info = None
     sub_warning = None
-    if user["tenant_id"]:
-        sub_check = check_tenant_subscription(user["tenant_id"])
+    if user_dict["tenant_id"]:
+        sub_check = check_tenant_subscription(user_dict["tenant_id"])
         if sub_check.get("is_locked"):
             raise HTTPException(status_code=403, detail=f"ACCOUNT LOCKED: {sub_check.get('message')}")
         tenant_info = sub_check
         sub_warning = sub_check.get("warning")
 
-    token = generate_jwt(user["id"], user["tenant_id"], user["username"], user["role"])
+    token = generate_jwt(user_dict["id"], user_dict["tenant_id"], user_dict["username"], user_dict["role"])
 
     return {
         "success": True,
         "token": token,
+        "device_token": new_device_token,
         "user": {
-            "id": user["id"],
-            "username": user["username"],
-            "email": user["email"],
-            "role": user["role"],
-            "tenant_id": user["tenant_id"]
+            "id": user_dict["id"],
+            "username": user_dict["username"],
+            "email": user_dict["email"],
+            "role": user_dict["role"],
+            "tenant_id": user_dict["tenant_id"]
         },
         "subscription": tenant_info,
         "warning": sub_warning

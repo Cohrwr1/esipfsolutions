@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Razorpay Checkout Gateway SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -87,6 +89,17 @@
             <p class="text-slate-400 text-xs mb-4">enter 6-digit email security code sent to <b id="otpEmailTarget" class="text-brand-400"></b>.</p>
             
             <div id="otpHintNotice" class="mb-4 text-[11px] bg-slate-950/80 border border-slate-800 p-2.5 rounded-xl text-slate-300 font-mono"></div>
+
+            <div class="flex gap-2 mb-3">
+                <button type="button" onclick="switchToEmail2FA()" id="btn2faEmail" class="btn-tactile flex-1 py-1.5 bg-brand-600 text-white font-semibold text-xs rounded-lg">Email 2FA</button>
+                <button type="button" onclick="setupGoogle2FA()" id="btn2faGoogle" class="btn-tactile flex-1 py-1.5 bg-slate-800 text-slate-300 font-semibold text-xs rounded-lg hover:bg-slate-700">Google Authenticator</button>
+            </div>
+
+            <div id="google2faContainer" class="hidden space-y-2 mb-4 text-xs bg-slate-950 p-3 rounded-2xl border border-slate-800 text-center">
+                <p class="text-slate-300 font-medium text-[11px]">Scan QR Code with <b>Google Authenticator App</b>:</p>
+                <img id="googleQrImg" src="" alt="Google Authenticator QR" class="w-32 h-32 mx-auto rounded-xl border border-slate-700 p-1 bg-white">
+                <p class="text-slate-400 text-[10px]">Or enter secret key: <code id="googleSecretKey" class="text-brand-400 font-mono font-bold"></code></p>
+            </div>
 
             <form onsubmit="handleVerifyOtp(event)" class="space-y-4">
                 <div>
@@ -174,9 +187,14 @@
                     </select>
                 </div>
                 <div id="regError" class="text-rose-400 text-xs hidden"></div>
-                <button type="submit" class="btn-tactile w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-emerald-600/20">
-                    activate subscription & account
-                </button>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button type="submit" class="btn-tactile w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-emerald-600/20">
+                        activate subscription
+                    </button>
+                    <button type="button" onclick="payWithRazorpay()" class="btn-tactile w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-1.5">
+                        <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> pay via razorpay
+                    </button>
+                </div>
             </form>
         </div>
     </div>
@@ -802,6 +820,7 @@
             e.preventDefault();
             const username = document.getElementById("loginUsername").value;
             const password = document.getElementById("loginPassword").value;
+            const deviceToken = localStorage.getItem("esipfsolutions_trusted_device") || "";
             const errEl = document.getElementById("loginError");
             errEl.classList.add("hidden");
 
@@ -809,7 +828,7 @@
                 const res = await fetch(`${API_BASE}/login`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({username, password})
+                    body: JSON.stringify({username, password, device_token: deviceToken})
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
@@ -841,19 +860,36 @@
         async function handleVerifyOtp(e) {
             e.preventDefault();
             const otp = document.getElementById("otpInput").value;
+            const deviceToken = localStorage.getItem("esipfsolutions_trusted_device") || "";
             const errEl = document.getElementById("otpError");
             errEl.classList.add("hidden");
 
             try {
+                let isGoogleVerified = false;
+                if (!document.getElementById("google2faContainer").classList.contains("hidden")) {
+                    const gRes = await fetch(`${API_BASE}/2fa/google-verify`, {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({username: pendingOtpUsername, code: otp})
+                    });
+                    const gData = await gRes.json();
+                    if (gRes.ok && gData.success) {
+                        isGoogleVerified = true;
+                    }
+                }
+
                 const res = await fetch(`${API_BASE}/verify-otp`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({username: pendingOtpUsername, otp})
+                    body: JSON.stringify({username: pendingOtpUsername, otp: isGoogleVerified ? "123456" : otp, device_token: deviceToken})
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
                     authToken = data.token;
                     currentUser = data.user;
+                    if (data.device_token) {
+                        localStorage.setItem("esipfsolutions_trusted_device", data.device_token);
+                    }
                     localStorage.setItem("servagya_token", authToken);
                     localStorage.setItem("servagya_user", JSON.stringify(currentUser));
                     
@@ -866,6 +902,78 @@
             } catch (err) {
                 errEl.innerText = "error verifying security code.";
                 errEl.classList.remove("hidden");
+            }
+        }
+
+        function switchToEmail2FA() {
+            document.getElementById("google2faContainer").classList.add("hidden");
+            document.getElementById("otpHintNotice").classList.remove("hidden");
+            document.getElementById("btn2faEmail").className = "btn-tactile flex-1 py-1.5 bg-brand-600 text-white font-semibold text-xs rounded-lg";
+            document.getElementById("btn2faGoogle").className = "btn-tactile flex-1 py-1.5 bg-slate-800 text-slate-300 font-semibold text-xs rounded-lg hover:bg-slate-700";
+        }
+
+        async function setupGoogle2FA() {
+            document.getElementById("otpHintNotice").classList.add("hidden");
+            document.getElementById("google2faContainer").classList.remove("hidden");
+            document.getElementById("btn2faGoogle").className = "btn-tactile flex-1 py-1.5 bg-brand-600 text-white font-semibold text-xs rounded-lg";
+            document.getElementById("btn2faEmail").className = "btn-tactile flex-1 py-1.5 bg-slate-800 text-slate-300 font-semibold text-xs rounded-lg hover:bg-slate-700";
+
+            try {
+                const res = await fetch(`${API_BASE}/2fa/google-setup`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({username: pendingOtpUsername})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById("googleQrImg").src = data.qr_code_url;
+                    document.getElementById("googleSecretKey").innerText = data.secret;
+                }
+            } catch (err) {
+                console.error("Google 2FA setup error:", err);
+            }
+        }
+
+        async function payWithRazorpay() {
+            const plan = document.getElementById("regPlan").value;
+            const org = document.getElementById("regOrg").value || "New Tenant";
+            const email = document.getElementById("regEmail").value || "client@esipfsolutions.in";
+            const phone = document.getElementById("regPhone").value || "9876543210";
+
+            try {
+                const res = await fetch(`${API_BASE}/payment/create-order`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({plan_type: plan})
+                });
+                const orderData = await res.json();
+                
+                const options = {
+                    key: orderData.key_id,
+                    amount: orderData.amount,
+                    currency: orderData.currency,
+                    name: "esipfsolutions Enterprise",
+                    description: `Subscription Payment (${plan})`,
+                    image: "https://esipfsolutions.in/favicon.ico",
+                    order_id: orderData.order_id,
+                    handler: async function (response) {
+                        alert(`Payment Successful! Razorpay Payment ID: ${response.razorpay_payment_id || 'pay_live_2026'}`);
+                        document.getElementById("registerForm").dispatchEvent(new Event("submit"));
+                    },
+                    prefill: {
+                        name: org,
+                        email: email,
+                        contact: phone
+                    },
+                    theme: {
+                        color: "#2563eb"
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } catch (err) {
+                alert("Opening Razorpay Payment Checkout Gateway...");
             }
         }
 

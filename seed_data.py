@@ -23,7 +23,7 @@ def seed():
     # 3. Create Clean Owner Super Admin Account ONLY
     cursor.execute('''
         INSERT OR REPLACE INTO users (id, tenant_id, username, email, password_hash, role, is_2fa_enabled)
-        VALUES ('owner_usr_001', NULL, 'OwNeR', 'esipfsolutions.in@esipfsolutions.com', ?, 'owner', 0)
+        VALUES ('owner_usr_001', NULL, 'OwNeR', 'gulatihriday.003@gmail.com', ?, 'owner', 0)
     ''', (hash_password("Esipfsolutions@Owner"),))
 
     conn.commit()
