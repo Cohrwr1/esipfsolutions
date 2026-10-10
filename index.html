@@ -39,37 +39,37 @@
             box-shadow: none !important;
         }
         .logo-gradient {
-            background: linear-gradient(135deg, #60a5fa 0%, #38bdf8 50%, #34d399 100%);
+            background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 50%, #059669 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #090d16; }
-        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="bg-[#090d16] text-slate-100 min-h-screen font-sans flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+<body class="bg-slate-100 text-slate-800 min-h-screen font-sans flex flex-col antialiased selection:bg-brand-500 selection:text-white">
 
     <!-- TOAST NOTIFICATION CONTAINER FOR REAL-TIME LIVE AUTO-UPDATES -->
     <div id="liveToastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- LAYER 1: MASTER PRE-APP PIN GATE MODAL -->
-    <div id="masterPinModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-xl">
-        <div class="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden">
+    <div id="masterPinModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+        <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden">
             <div class="absolute -top-12 -right-12 w-40 h-40 bg-brand-600/15 rounded-full blur-3xl"></div>
             
-            <div class="w-14 h-14 bg-slate-950 border border-brand-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-brand-400 shadow-inner">
+            <div class="w-14 h-14 bg-brand-50 border border-brand-200 rounded-2xl flex items-center justify-center mx-auto mb-4 text-brand-600 shadow-sm">
                 <i data-lucide="shield-check" class="w-7 h-7"></i>
             </div>
 
-            <h2 class="text-2xl font-bold tracking-tight mb-1 text-white"><span class="logo-gradient text-2xl font-extrabold lowercase">esipfsolutions</span> security gate</h2>
-            <p class="text-slate-400 text-xs mb-6">enter master access pin to unlock platform features.</p>
+            <h2 class="text-2xl font-bold tracking-tight mb-1 text-slate-900"><span class="logo-gradient text-2xl font-extrabold lowercase">esipfsolutions</span> security gate</h2>
+            <p class="text-slate-500 text-xs mb-6 font-medium">enter master access pin to unlock platform features.</p>
 
             <form onsubmit="handleMasterPin(event)" class="space-y-4">
                 <div>
                     <input type="password" id="masterPinInput" maxlength="6" placeholder="• • • •" 
-                           class="w-full text-center text-3xl tracking-[0.6em] font-mono py-3.5 bg-slate-950 border border-slate-800/80 rounded-2xl focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-white placeholder-slate-700 transition">
+                           class="w-full text-center text-3xl tracking-[0.6em] font-mono py-3.5 bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 text-slate-900 placeholder-slate-400 transition focus:bg-white">
                 </div>
                 <div id="pinError" class="text-rose-400 text-xs hidden font-medium"></div>
                 <button type="submit" 
@@ -81,19 +81,19 @@
     </div>
 
     <!-- LAYER 1.5: 2FA OTP SECURITY VERIFICATION MODAL -->
-    <div id="otpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 backdrop-blur-xl hidden p-4">
-        <div class="bg-slate-900/90 border border-slate-800/80 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden">
-            <div class="w-14 h-14 bg-slate-950 border border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-emerald-400 shadow-inner">
+    <div id="otpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden">
+            <div class="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-4 text-emerald-600 shadow-sm">
                 <i data-lucide="mail-check" class="w-7 h-7"></i>
             </div>
 
-            <h2 class="text-2xl font-bold tracking-tight mb-1 text-white"><span class="logo-gradient text-2xl font-extrabold lowercase">esipfsolutions</span> 2FA security</h2>
-            <p class="text-slate-300 text-xs mb-6">Enter the 6-digit security verification code sent to <b id="otpEmailTarget" class="text-brand-400"></b> via Google Mail.</p>
+            <h2 class="text-2xl font-bold tracking-tight mb-1 text-slate-900"><span class="logo-gradient text-2xl font-extrabold lowercase">esipfsolutions</span> 2FA security</h2>
+            <p class="text-slate-600 text-xs mb-6 font-medium">Enter the 6-digit security verification code sent to <b id="otpEmailTarget" class="text-brand-600"></b> via Google Mail.</p>
 
             <form onsubmit="handleVerifyOtp(event)" class="space-y-4">
                 <div>
                     <input type="text" id="otpInput" maxlength="6" required placeholder="• • • • • •" 
-                           class="w-full text-center text-3xl tracking-[0.5em] font-mono py-3.5 bg-slate-950 border border-slate-800/80 rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-white placeholder-slate-700 transition">
+                           class="w-full text-center text-3xl tracking-[0.5em] font-mono py-3.5 bg-slate-50 border border-slate-300 rounded-2xl focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 text-slate-900 placeholder-slate-400 transition focus:bg-white">
                 </div>
                 <div id="otpError" class="text-rose-400 text-xs hidden font-medium"></div>
                 <button type="submit" 
@@ -101,9 +101,9 @@
                     <i data-lucide="check-circle" class="w-4 h-4"></i> verify code & unlock portal
                 </button>
             </form>
-            <div class="mt-4 pt-3 border-t border-slate-800/60 space-y-2">
-                <p class="text-slate-400 text-[11px]">Verified once per device • Next login will automatically remember this browser</p>
-                <button type="button" onclick="cancelOtpVerification()" class="text-slate-400 hover:text-white text-xs underline inline-block">
+            <div class="mt-4 pt-3 border-t border-slate-200 space-y-2">
+                <p class="text-slate-500 text-[11px]">Verified once per device • Next login will automatically remember this browser</p>
+                <button type="button" onclick="cancelOtpVerification()" class="text-slate-500 hover:text-slate-800 text-xs underline inline-block font-medium">
                     ← back to sign in
                 </button>
             </div>
@@ -111,34 +111,34 @@
     </div>
 
     <!-- LAYER 2: LOGIN / REGISTER CONTAINER -->
-    <div id="authContainer" class="hidden min-h-screen flex items-center justify-center p-4 bg-[#090d16]">
-        <div class="max-w-md w-full bg-slate-900 border border-slate-800/80 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+    <div id="authContainer" class="hidden min-h-screen flex items-center justify-center p-4 bg-slate-100">
+        <div class="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-8 shadow-xl relative overflow-hidden">
             <div class="text-center mb-6">
                 <div class="inline-flex items-center gap-2 text-2xl font-black tracking-tight mb-1">
                     <i data-lucide="shield" class="w-6 h-6 text-brand-400"></i>
                     <span class="logo-gradient lowercase text-2xl font-extrabold">esipfsolutions</span>
-                    <span class="text-xs uppercase tracking-widest font-bold px-2 py-0.5 rounded-full bg-slate-950 border border-slate-800 text-slate-400">cloud</span>
+                    <span class="text-xs uppercase tracking-widest font-bold px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600">cloud</span>
                 </div>
-                <p class="text-slate-400 text-xs">next-gen enterprise esi, pf & payroll platform</p>
+                <p class="text-slate-500 text-xs font-medium">next-gen enterprise esi, pf & payroll platform</p>
             </div>
 
             <!-- Auth Tabs -->
-            <div class="flex border-b border-slate-800 mb-6 text-sm">
-                <button id="tabLoginBtn" onclick="switchAuthTab('login')" class="flex-1 pb-3 text-brand-400 font-semibold border-b-2 border-brand-500 transition-all duration-200">sign in</button>
-                <button id="tabRegisterBtn" onclick="switchAuthTab('register')" class="flex-1 pb-3 text-slate-400 font-semibold border-b-2 border-transparent transition-all duration-200">create business account</button>
+            <div class="flex border-b border-slate-200 mb-6 text-sm">
+                <button id="tabLoginBtn" onclick="switchAuthTab('login')" class="flex-1 pb-3 text-brand-600 font-bold border-b-2 border-brand-600 transition-all duration-200">sign in</button>
+                <button id="tabRegisterBtn" onclick="switchAuthTab('register')" class="flex-1 pb-3 text-slate-500 hover:text-slate-800 font-semibold border-b-2 border-transparent transition-all duration-200">create business account</button>
             </div>
 
             <!-- Login Form -->
             <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">username</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">username</label>
                     <input type="text" id="loginUsername" required placeholder="e.g. owner or apex_admin"
-                           class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800/80 rounded-xl text-white text-sm focus:outline-none focus:border-brand-500">
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">password</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">password</label>
                     <input type="password" id="loginPassword" required placeholder="••••••••"
-                           class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800/80 rounded-xl text-white text-sm focus:outline-none focus:border-brand-500">
+                           class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20">
                 </div>
                 <div id="loginError" class="text-rose-400 text-xs hidden"></div>
                 <button type="submit" class="btn-tactile w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl text-sm transition shadow-lg shadow-brand-600/20">
@@ -150,32 +150,32 @@
             <!-- Register Form -->
             <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3.5 hidden">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">company / business name</label>
-                    <input type="text" id="regOrg" required placeholder="e.g. Apex Global India" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">company / business name</label>
+                    <input type="text" id="regOrg" required placeholder="e.g. Apex Global India" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">email</label>
-                        <input type="email" id="regEmail" required placeholder="admin@company.com" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">email</label>
+                        <input type="email" id="regEmail" required placeholder="admin@company.com" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">phone</label>
-                        <input type="text" id="regPhone" required placeholder="+91 9876543210" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">phone</label>
+                        <input type="text" id="regPhone" required placeholder="+91 9876543210" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">admin username</label>
-                        <input type="text" id="regUsername" required placeholder="admin_user" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">admin username</label>
+                        <input type="text" id="regUsername" required placeholder="admin_user" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">password</label>
-                        <input type="password" id="regPassword" required placeholder="••••••••" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">password</label>
+                        <input type="password" id="regPassword" required placeholder="••••••••" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">select subscription tier</label>
-                    <select id="regPlan" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">select subscription tier</label>
+                    <select id="regPlan" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20">
                         <option value="test_verify" selected>Live Gateway Test Plan (₹1)</option>
                         <option value="6_months">6-Month Plan (₹12,000)</option>
                         <option value="1_year">1-Year Plan (₹20,000)</option>
@@ -187,7 +187,7 @@
                     <button type="button" onclick="payWithRazorpayAndRegister()" class="btn-tactile w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2">
                         <i data-lucide="credit-card" class="w-4 h-4"></i> Option 1: Pay via Razorpay & Activate Instantly
                     </button>
-                    <button type="button" onclick="requestAccessFromOwner()" class="btn-tactile w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-2">
+                    <button type="button" onclick="requestAccessFromOwner()" class="btn-tactile w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-2">
                         <i data-lucide="send" class="w-4 h-4 text-emerald-400"></i> Option 2: Request Access from Owner (Cash / Offline)
                     </button>
                 </div>
@@ -196,27 +196,27 @@
     </div>
 
     <!-- MAIN APP DASHBOARD WRAPPER -->
-    <div id="appContainer" class="hidden min-h-screen flex flex-col bg-[#090d16]">
+    <div id="appContainer" class="hidden min-h-screen flex flex-col bg-slate-100 text-slate-800">
         <!-- Top Navbar -->
-        <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-40 backdrop-blur-md">
+        <header class="bg-white/95 border-b border-slate-200 sticky top-0 z-40 backdrop-blur-md shadow-xs">
             <div class="max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 bg-slate-950 border border-brand-500/30 rounded-xl flex items-center justify-center text-brand-400 shadow-inner">
+                    <div class="w-9 h-9 bg-brand-50 border border-brand-200 rounded-xl flex items-center justify-center text-brand-600 shadow-sm">
                         <i data-lucide="shield" class="w-4 h-4"></i>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="logo-gradient font-black tracking-tight text-xl lowercase">esipfsolutions</span>
-                        <span id="roleBadge" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-slate-950 text-brand-300 border border-slate-800">Admin</span>
+                        <span id="roleBadge" class="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">Admin</span>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-4">
                     <div id="subscriptionStatusBadge" class="hidden text-xs px-3 py-1 rounded-full border"></div>
-                    <div class="flex items-center gap-2 text-xs bg-slate-950 border border-slate-800/80 px-3 py-1.5 rounded-xl text-slate-300">
+                    <div class="flex items-center gap-2 text-xs bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-slate-700 font-medium">
                         <i data-lucide="user-check" class="w-4 h-4 text-brand-400"></i>
-                        <span id="navUsername" class="font-semibold text-white">user</span>
+                        <span id="navUsername" class="font-semibold text-slate-900">user</span>
                     </div>
-                    <button onclick="logout()" title="logout" class="btn-tactile p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 border border-transparent hover:border-slate-700 transition">
+                    <button onclick="logout()" title="logout" class="btn-tactile p-2 text-slate-500 hover:text-slate-900 rounded-xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -236,17 +236,17 @@
         <div id="ownerDashboardView" class="hidden max-w-7xl mx-auto w-full p-6 space-y-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-white tracking-tight">owner master control panel</h1>
-                    <p class="text-slate-400 text-xs">global multi-tenant esipfsolutions management & edit controls</p>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">owner master control panel</h1>
+                    <p class="text-slate-500 text-xs font-medium">global multi-tenant esipfsolutions management & edit controls</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-3 py-1.5 rounded-xl shadow-inner">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> live auto-sync active
                     </span>
-                    <button onclick="openGoogleSettingsModal()" class="btn-tactile px-3.5 py-2 bg-brand-950/80 hover:bg-brand-900 text-brand-300 border border-brand-800/80 text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-sm">
+                    <button onclick="openGoogleSettingsModal()" class="btn-tactile px-3.5 py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-xs">
                         <i data-lucide="sliders" class="w-3.5 h-3.5"></i> email & razorpay settings
                     </button>
-                    <button onclick="loadOwnerSummary(false)" title="Emergency manual refresh" class="btn-tactile px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-2 shadow-sm">
+                    <button onclick="loadOwnerSummary(false)" title="Emergency manual refresh" class="btn-tactile px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 flex items-center gap-2 shadow-xs">
                         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> refresh data
                     </button>
                 </div>
@@ -254,36 +254,36 @@
 
             <!-- Stats Grid -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 relative overflow-hidden">
-                    <div class="text-slate-400 text-xs font-medium mb-1">total system revenue</div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden shadow-xs">
+                    <div class="text-slate-500 text-xs font-semibold mb-1">total system revenue</div>
                     <div id="statRevenue" class="text-3xl font-black text-emerald-400">₹0</div>
                 </div>
-                <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 relative overflow-hidden">
-                    <div class="text-slate-400 text-xs font-medium mb-1">active subscribers</div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden shadow-xs">
+                    <div class="text-slate-500 text-xs font-semibold mb-1">active subscribers</div>
                     <div id="statActive" class="text-3xl font-black text-brand-400">0</div>
                 </div>
-                <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 relative overflow-hidden">
-                    <div class="text-slate-400 text-xs font-medium mb-1">locked / expired tenants</div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden shadow-xs">
+                    <div class="text-slate-500 text-xs font-semibold mb-1">locked / expired tenants</div>
                     <div id="statLocked" class="text-3xl font-black text-rose-400">0</div>
                 </div>
-                <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 relative overflow-hidden">
-                    <div class="text-slate-400 text-xs font-medium mb-1">pending access requests</div>
+                <div class="bg-white border border-slate-200 rounded-2xl p-5 relative overflow-hidden shadow-xs">
+                    <div class="text-slate-500 text-xs font-semibold mb-1">pending access requests</div>
                     <div id="statPending" class="text-3xl font-black text-amber-400">0</div>
                 </div>
             </div>
 
             <!-- Access Requests Pending Owner Approval Section -->
-            <div id="pendingRequestsContainer" class="bg-slate-900 border border-amber-500/30 rounded-2xl overflow-hidden shadow-2xl">
-                <div class="px-6 py-4 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between">
-                    <h3 class="font-bold text-amber-300 text-sm flex items-center gap-2">
+            <div id="pendingRequestsContainer" class="bg-white border border-amber-200 rounded-2xl overflow-hidden shadow-xs">
+                <div class="px-6 py-4 bg-amber-50/70 border-b border-amber-200 flex items-center justify-between">
+                    <h3 class="font-bold text-amber-800 text-sm flex items-center gap-2">
                         <i data-lucide="clock" class="w-4 h-4 text-amber-400"></i> access requests pending owner approval
-                        <span id="pendingRequestsBadge" class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">0</span>
+                        <span id="pendingRequestsBadge" class="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">0</span>
                     </h3>
-                    <span class="text-[11px] text-amber-400/80">offline / cash registration requests awaiting your decision</span>
+                    <span class="text-[11px] text-amber-700 font-medium">offline / cash registration requests awaiting your decision</span>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-slate-300">
-                        <thead class="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                    <table class="w-full text-left text-xs text-slate-700">
+                        <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
                             <tr>
                                 <th class="p-4">organization</th>
                                 <th class="p-4">admin user</th>
@@ -294,7 +294,7 @@
                                 <th class="p-4 text-right">decision</th>
                             </tr>
                         </thead>
-                        <tbody id="ownerPendingRequestsTable" class="divide-y divide-slate-800">
+                        <tbody id="ownerPendingRequestsTable" class="divide-y divide-slate-100 bg-white">
                             <!-- Injected -->
                         </tbody>
                     </table>
@@ -302,15 +302,15 @@
             </div>
 
             <!-- Tenants Table -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-                <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between">
-                    <h3 class="font-bold text-white text-sm flex items-center gap-2">
+            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
                         <i data-lucide="users" class="w-4 h-4 text-brand-400"></i> registered tenant accounts
                     </h3>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs text-slate-300">
-                        <thead class="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                    <table class="w-full text-left text-xs text-slate-700">
+                        <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
                             <tr>
                                 <th class="p-4">organization</th>
                                 <th class="p-4">contact</th>
@@ -321,7 +321,7 @@
                                 <th class="p-4 text-right">owner control actions</th>
                             </tr>
                         </thead>
-                        <tbody id="ownerTenantsTable" class="divide-y divide-slate-800">
+                        <tbody id="ownerTenantsTable" class="divide-y divide-slate-100 bg-white">
                             <!-- Rows injected dynamically -->
                         </tbody>
                     </table>
@@ -331,193 +331,248 @@
 
         <!-- TENANT PAYROLL DASHBOARD VIEW -->
         <div id="tenantDashboardView" class="hidden max-w-7xl mx-auto w-full p-6 space-y-6">
-            <!-- Company Selection & Quick Tools Bar -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-brand-600/10 border border-brand-500/30 rounded-lg flex items-center justify-center text-brand-400">
-                        <i data-lucide="building" class="w-4 h-4"></i>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] uppercase font-bold text-slate-500">active company</label>
-                        <select id="companySelect" onchange="onCompanyChanged()" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1 text-white text-xs focus:outline-none focus:border-brand-500 font-semibold">
-                            <!-- Injected -->
-                        </select>
-                    </div>
-                </div>
 
-                <div class="flex items-center gap-2">
-                    <button onclick="openEditCompanyModal()" class="btn-tactile px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-400 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 shadow-sm">
-                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> edit company & rates
-                    </button>
-                    <button onclick="openGrantLoanModal()" class="btn-tactile px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 shadow-sm">
-                        <i data-lucide="coins" class="w-3.5 h-3.5"></i> grant loan / advance
-                    </button>
-                    <button onclick="openCalculatorsModal()" class="btn-tactile px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-400 text-xs font-semibold rounded-xl border border-slate-700 flex items-center gap-1.5 shadow-sm">
-                        <i data-lucide="calculator" class="w-3.5 h-3.5"></i> gratuity & bonus calc
-                    </button>
-                    <button onclick="openAddCompanyModal()" class="btn-tactile px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-md shadow-brand-600/20">
-                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> add company
-                    </button>
+            <!-- STATE 1: ONBOARDING HERO WHEN NO COMPANY EXISTS -->
+            <div id="noCompanyOnboarding" class="space-y-6 hidden">
+                <div class="bg-white border border-slate-200 rounded-3xl p-8 md:p-12 shadow-sm text-center relative overflow-hidden">
+                    <div class="max-w-2xl mx-auto space-y-6">
+                        <div class="w-20 h-20 bg-brand-50 border border-brand-200 rounded-3xl flex items-center justify-center mx-auto text-brand-600 shadow-sm">
+                            <i data-lucide="building-2" class="w-10 h-10"></i>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Initial Organization Setup
+                            </div>
+                            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Create Your First Company Profile</h2>
+                            <p class="text-slate-600 text-sm leading-relaxed">
+                                Welcome to <span class="font-bold text-slate-900">esipfsolutions</span>! Before adding employees or calculating payroll, you must set up your company profile with your EPF establishment code, ESI registration code, and statutory contribution rates.
+                            </p>
+                        </div>
+
+                        <div class="pt-2">
+                            <button onclick="openAddCompanyModal()" class="btn-tactile inline-flex items-center gap-2.5 px-8 py-4 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-2xl shadow-lg shadow-brand-500/25 text-base transition-all hover:scale-[1.02] active:scale-[0.98]">
+                                <i data-lucide="plus-circle" class="w-5 h-5"></i> Create Your First Company
+                            </button>
+                        </div>
+
+                        <!-- 3-Step Feature Preview Cards -->
+                        <div class="pt-8 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1.5">
+                                <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs"><i data-lucide="users" class="w-4 h-4"></i></div>
+                                <h4 class="font-bold text-xs text-slate-900">1. Employee Master</h4>
+                                <p class="text-[11px] text-slate-500">Register employee records with UAN, ESI IP, designation, and salary structures.</p>
+                            </div>
+                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1.5">
+                                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs"><i data-lucide="calculator" class="w-4 h-4"></i></div>
+                                <h4 class="font-bold text-xs text-slate-900">2. Automated Payroll</h4>
+                                <p class="text-[11px] text-slate-500">1-click statutory payroll calculation with exact PF 12%, ESI 0.75%, and PT.</p>
+                            </div>
+                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-1.5">
+                                <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs"><i data-lucide="file-check" class="w-4 h-4"></i></div>
+                                <h4 class="font-bold text-xs text-slate-900">3. Statutory Returns</h4>
+                                <p class="text-[11px] text-slate-500">Generate EPFO ECR text challans, ESIC monthly returns, and bank payout files.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center gap-2 text-xs text-amber-800 font-medium">
+                            <i data-lucide="lock" class="w-4 h-4 text-amber-600 shrink-0"></i>
+                            <span>Employee Directory, Attendance, and Payroll are locked until your company profile is created.</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- DYNAMIC TABS NAVIGATION -->
-            <div class="flex border-b border-slate-800 space-x-6 text-sm">
-                <button onclick="switchTenantTab('employees')" id="tabEmpBtn" class="btn-tactile pb-3 text-brand-400 font-semibold border-b-2 border-brand-500 flex items-center gap-2 transition-all duration-200">
-                    <i data-lucide="users" class="w-4 h-4"></i> employee master
-                </button>
-                <button onclick="switchTenantTab('attendance')" id="tabAttBtn" class="btn-tactile pb-3 text-slate-400 hover:text-slate-200 font-semibold border-b-2 border-transparent flex items-center gap-2 transition-all duration-200">
-                    <i data-lucide="calendar" class="w-4 h-4"></i> attendance & leaves
-                </button>
-                <button onclick="switchTenantTab('payroll')" id="tabPayBtn" class="btn-tactile pb-3 text-slate-400 hover:text-slate-200 font-semibold border-b-2 border-transparent flex items-center gap-2 transition-all duration-200">
-                    <i data-lucide="dollar-sign" class="w-4 h-4"></i> process payroll
-                </button>
-                <button onclick="switchTenantTab('reports')" id="tabRepBtn" class="btn-tactile pb-3 text-slate-400 hover:text-slate-200 font-semibold border-b-2 border-transparent flex items-center gap-2 transition-all duration-200">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> statutory reports & challans
-                </button>
-            </div>
-
-            <!-- TAB 1: EMPLOYEES DIRECTORY -->
-            <div id="tabEmployees" class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <h3 class="font-bold text-white text-lg">employee master directory</h3>
-                    <button onclick="openAddEmployeeModal()" class="btn-tactile px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow-lg shadow-brand-600/20">
-                        <i data-lucide="user-plus" class="w-4 h-4"></i> add new employee
-                    </button>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-                    <table class="w-full text-left text-xs text-slate-300">
-                        <thead class="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
-                            <tr>
-                                <th class="p-4">code</th>
-                                <th class="p-4">employee name</th>
-                                <th class="p-4">designation</th>
-                                <th class="p-4">basic pay (₹)</th>
-                                <th class="p-4">hra (₹)</th>
-                                <th class="p-4">uan / pf</th>
-                                <th class="p-4">bank acc</th>
-                                <th class="p-4 text-center">pf / esi / pt</th>
-                                <th class="p-4 text-right">action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="employeesTable" class="divide-y divide-slate-800">
-                            <!-- Employees -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- TAB 2: ATTENDANCE & LEAVES -->
-            <div id="tabAttendance" class="space-y-4 hidden">
-                <div class="flex items-center justify-between">
-                    <h3 class="font-bold text-white text-lg">monthly attendance & leave register</h3>
-                    <div class="flex items-center gap-2">
-                        <label class="text-xs text-slate-400 font-medium">select month:</label>
-                        <input type="month" id="attMonth" value="2026-10" onchange="loadAttendance()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-white text-xs">
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-                    <table class="w-full text-left text-xs text-slate-300">
-                        <thead class="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
-                            <tr>
-                                <th class="p-4">employee</th>
-                                <th class="p-4">total days</th>
-                                <th class="p-4">days worked</th>
-                                <th class="p-4">casual leave</th>
-                                <th class="p-4">medical leave</th>
-                                <th class="p-4">loss of pay (lop)</th>
-                                <th class="p-4">overtime (hrs)</th>
-                                <th class="p-4 text-right">action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="attendanceTable" class="divide-y divide-slate-800">
-                            <!-- Attendance Rows -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- TAB 3: PROCESS PAYROLL -->
-            <div id="tabPayroll" class="space-y-4 hidden">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-white text-lg">monthly payroll calculation engine</h3>
-                        <p class="text-slate-400 text-xs">automated epf (12%), esi (0.75%), state pt, and tds calculations</p>
-                    </div>
+            <!-- STATE 2: ACTIVE COMPANY WORKSPACE (SHOWN ONCE COMPANY EXISTS) -->
+            <div id="companyWorkspace" class="space-y-6">
+                <!-- Company Selection & Quick Tools Bar -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xs">
                     <div class="flex items-center gap-3">
-                        <input type="month" id="payMonth" value="2026-10" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-white text-xs">
-                        <button onclick="runPayrollProcessing()" class="btn-tactile px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow-lg shadow-emerald-600/20">
-                            <i data-lucide="play" class="w-4 h-4"></i> run monthly payroll
+                        <div class="w-8 h-8 bg-brand-50 border border-brand-200 rounded-lg flex items-center justify-center text-brand-600">
+                            <i data-lucide="building" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-slate-500">active company</label>
+                            <select id="companySelect" onchange="onCompanyChanged()" class="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1 text-slate-900 text-xs focus:outline-none focus:border-brand-500 font-semibold focus:bg-white">
+                                <!-- Injected -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="openEditCompanyModal()" class="btn-tactile px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-sky-700 text-xs font-semibold rounded-xl border border-slate-200 flex items-center gap-1.5 shadow-xs">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> edit company & rates
+                        </button>
+                        <button onclick="openGrantLoanModal()" class="btn-tactile px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-amber-700 text-xs font-semibold rounded-xl border border-slate-200 flex items-center gap-1.5 shadow-xs">
+                            <i data-lucide="coins" class="w-3.5 h-3.5"></i> grant loan / advance
+                        </button>
+                        <button onclick="openCalculatorsModal()" class="btn-tactile px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-indigo-700 text-xs font-semibold rounded-xl border border-slate-200 flex items-center gap-1.5 shadow-xs">
+                            <i data-lucide="calculator" class="w-3.5 h-3.5"></i> gratuity & bonus calc
+                        </button>
+                        <button onclick="openAddCompanyModal()" class="btn-tactile px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-xs">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> add company
                         </button>
                     </div>
                 </div>
 
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-                    <table class="w-full text-left text-xs text-slate-300">
-                        <thead class="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
-                            <tr>
-                                <th class="p-4">employee</th>
-                                <th class="p-4">gross salary</th>
-                                <th class="p-4">epf (emp)</th>
-                                <th class="p-4">esi (emp)</th>
-                                <th class="p-4">prof. tax</th>
-                                <th class="p-4">tds tax</th>
-                                <th class="p-4">loan emi</th>
-                                <th class="p-4">lop deduct</th>
-                                <th class="p-4 font-bold text-emerald-400">net salary</th>
-                                <th class="p-4 text-center">pay slip</th>
-                            </tr>
-                        </thead>
-                        <tbody id="payrollTable" class="divide-y divide-slate-800">
-                            <!-- Payroll Runs -->
-                        </tbody>
-                    </table>
+                <!-- DYNAMIC TABS NAVIGATION -->
+                <div class="flex border-b border-slate-200 space-x-6 text-sm">
+                    <button onclick="switchTenantTab('employees')" id="tabEmpBtn" class="btn-tactile pb-3 text-brand-600 font-bold border-b-2 border-brand-600 flex items-center gap-2 transition-all duration-200">
+                        <i data-lucide="users" class="w-4 h-4"></i> employee master
+                    </button>
+                    <button onclick="switchTenantTab('attendance')" id="tabAttBtn" class="btn-tactile pb-3 text-slate-500 hover:text-slate-800 font-semibold border-b-2 border-transparent flex items-center gap-2 transition-all duration-200">
+                        <i data-lucide="calendar" class="w-4 h-4"></i> attendance & leaves
+                    </button>
+                    <button onclick="switchTenantTab('payroll')" id="tabPayBtn" class="btn-tactile pb-3 text-slate-500 hover:text-slate-800 font-semibold border-b-2 border-transparent flex items-center gap-2 transition-all duration-200">
+                        <i data-lucide="dollar-sign" class="w-4 h-4"></i> process payroll
+                    </button>
+                    <button onclick="switchTenantTab('reports')" id="tabRepBtn" class="btn-tactile pb-3 text-slate-500 hover:text-slate-800 font-semibold border-b-2 border-transparent flex items-center gap-2 transition-all duration-200">
+                        <i data-lucide="file-text" class="w-4 h-4"></i> statutory reports & challans
+                    </button>
                 </div>
-            </div>
 
-            <!-- TAB 4: STATUTORY REPORTS & ECR EXPORT -->
-            <div id="tabReports" class="space-y-4 hidden">
-                <h3 class="font-bold text-white text-lg">statutory compliance & bank exporters</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
-                        <div>
-                            <div class="w-10 h-10 bg-brand-600/20 border border-brand-500/30 rounded-xl flex items-center justify-center text-brand-400 mb-4">
-                                <i data-lucide="file-code" class="w-5 h-5"></i>
-                            </div>
-                            <h4 class="font-bold text-white mb-1">epfo ecr text file</h4>
-                            <p class="text-slate-400 text-xs mb-4">official electronic challan-cum-return format with #~# delimiters for epfo employer portal.</p>
-                        </div>
-                        <button onclick="downloadEPF_ECR()" class="btn-tactile w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-brand-600/20">
-                            <i data-lucide="download" class="w-4 h-4"></i> export epf ecr (.txt)
+                <!-- TAB 1: EMPLOYEES DIRECTORY -->
+                <div id="tabEmployees" class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-slate-900 text-lg">employee master directory</h3>
+                        <button onclick="openAddEmployeeModal()" class="btn-tactile px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow-xs">
+                            <i data-lucide="user-plus" class="w-4 h-4"></i> add new employee
                         </button>
                     </div>
 
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
-                        <div>
-                            <div class="w-10 h-10 bg-sky-600/20 border border-sky-500/30 rounded-xl flex items-center justify-center text-sky-400 mb-4">
-                                <i data-lucide="shield" class="w-5 h-5"></i>
-                            </div>
-                            <h4 class="font-bold text-white mb-1">esic monthly return csv</h4>
-                            <p class="text-slate-400 text-xs mb-4">official esi monthly return bulk upload csv format for the esic portal.</p>
+                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                        <table class="w-full text-left text-xs text-slate-700">
+                            <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-4">code</th>
+                                    <th class="p-4">employee name</th>
+                                    <th class="p-4">designation</th>
+                                    <th class="p-4">basic pay (₹)</th>
+                                    <th class="p-4">hra (₹)</th>
+                                    <th class="p-4">uan / pf</th>
+                                    <th class="p-4">bank acc</th>
+                                    <th class="p-4 text-center">pf / esi / pt</th>
+                                    <th class="p-4 text-right">action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeesTable" class="divide-y divide-slate-100 bg-white">
+                                <!-- Employees -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 2: ATTENDANCE & LEAVES -->
+                <div id="tabAttendance" class="space-y-4 hidden">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-slate-900 text-lg">monthly attendance & leave register</h3>
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs text-slate-600 font-medium">select month:</label>
+                            <input type="month" id="attMonth" value="2026-10" onchange="loadAttendance()" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 text-xs">
                         </div>
-                        <button onclick="downloadESI_CSV()" class="btn-tactile w-full py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-sky-600/20">
-                            <i data-lucide="download" class="w-4 h-4"></i> export esi return (.csv)
-                        </button>
                     </div>
 
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-xl">
+                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                        <table class="w-full text-left text-xs text-slate-700">
+                            <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-4">employee</th>
+                                    <th class="p-4">total days</th>
+                                    <th class="p-4">days worked</th>
+                                    <th class="p-4">casual leave</th>
+                                    <th class="p-4">medical leave</th>
+                                    <th class="p-4">loss of pay (lop)</th>
+                                    <th class="p-4">overtime (hrs)</th>
+                                    <th class="p-4 text-right">action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTable" class="divide-y divide-slate-100 bg-white">
+                                <!-- Attendance Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 3: PROCESS PAYROLL -->
+                <div id="tabPayroll" class="space-y-4 hidden">
+                    <div class="flex items-center justify-between">
                         <div>
-                            <div class="w-10 h-10 bg-emerald-600/20 border border-emerald-500/30 rounded-xl flex items-center justify-center text-emerald-400 mb-4">
-                                <i data-lucide="building-2" class="w-5 h-5"></i>
-                            </div>
-                            <h4 class="font-bold text-white mb-1">bank disbursement csv</h4>
-                            <p class="text-slate-400 text-xs mb-4">bulk payment transfer format for hdfc, icici, sbi, and axis bank corporate banking upload.</p>
+                            <h3 class="font-bold text-slate-900 text-lg">monthly payroll calculation engine</h3>
+                            <p class="text-slate-500 text-xs font-medium">automated epf (12%), esi (0.75%), state pt, and tds calculations</p>
                         </div>
-                        <button onclick="downloadBankCSV()" class="btn-tactile w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
-                            <i data-lucide="download" class="w-4 h-4"></i> export bank statement (.csv)
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <input type="month" id="payMonth" value="2026-10" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-slate-900 text-xs">
+                            <button onclick="runPayrollProcessing()" class="btn-tactile px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl flex items-center gap-2 shadow-xs">
+                                <i data-lucide="play" class="w-4 h-4"></i> run monthly payroll
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                        <table class="w-full text-left text-xs text-slate-700">
+                            <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-4">employee</th>
+                                    <th class="p-4">gross salary</th>
+                                    <th class="p-4">epf (emp)</th>
+                                    <th class="p-4">esi (emp)</th>
+                                    <th class="p-4">prof. tax</th>
+                                    <th class="p-4">tds tax</th>
+                                    <th class="p-4">loan emi</th>
+                                    <th class="p-4">lop deduct</th>
+                                    <th class="p-4 font-bold text-emerald-700">net salary</th>
+                                    <th class="p-4 text-center">pay slip</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payrollTable" class="divide-y divide-slate-100 bg-white">
+                                <!-- Payroll Runs -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 4: STATUTORY REPORTS & ECR EXPORT -->
+                <div id="tabReports" class="space-y-4 hidden">
+                    <h3 class="font-bold text-slate-900 text-lg">statutory compliance & bank exporters</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between shadow-xs">
+                            <div>
+                                <div class="w-10 h-10 bg-brand-50 border border-brand-200 rounded-xl flex items-center justify-center text-brand-600 mb-4">
+                                    <i data-lucide="file-code" class="w-5 h-5"></i>
+                                </div>
+                                <h4 class="font-bold text-slate-900 mb-1">epfo ecr text file</h4>
+                                <p class="text-slate-500 text-xs mb-4">official electronic challan-cum-return format with #~# delimiters for epfo employer portal.</p>
+                            </div>
+                            <button onclick="downloadEPF_ECR()" class="btn-tactile w-full py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs">
+                                <i data-lucide="download" class="w-4 h-4"></i> export epf ecr (.txt)
+                            </button>
+                        </div>
+
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between shadow-xs">
+                            <div>
+                                <div class="w-10 h-10 bg-sky-50 border border-sky-200 rounded-xl flex items-center justify-center text-sky-600 mb-4">
+                                    <i data-lucide="shield" class="w-5 h-5"></i>
+                                </div>
+                                <h4 class="font-bold text-slate-900 mb-1">esic monthly return csv</h4>
+                                <p class="text-slate-500 text-xs mb-4">official esi monthly return bulk upload csv format for the esic portal.</p>
+                            </div>
+                            <button onclick="downloadESI_CSV()" class="btn-tactile w-full py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs">
+                                <i data-lucide="download" class="w-4 h-4"></i> export esi return (.csv)
+                            </button>
+                        </div>
+
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between shadow-xs">
+                            <div>
+                                <div class="w-10 h-10 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-center text-emerald-600 mb-4">
+                                    <i data-lucide="building-2" class="w-5 h-5"></i>
+                                </div>
+                                <h4 class="font-bold text-slate-900 mb-1">bank disbursement csv</h4>
+                                <p class="text-slate-500 text-xs mb-4">bulk payment transfer format for hdfc, icici, sbi, and axis bank corporate banking upload.</p>
+                            </div>
+                            <button onclick="downloadBankCSV()" class="btn-tactile w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs">
+                                <i data-lucide="download" class="w-4 h-4"></i> export bank statement (.csv)
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -525,35 +580,35 @@
     </div>
 
     <!-- MODAL: ADD COMPANY -->
-    <div id="addCompanyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-white">Add New Company</h3>
-                <button onclick="closeAddCompanyModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <div id="addCompanyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-slate-800">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 class="font-bold text-slate-900">Add New Company</h3>
+                <button onclick="closeAddCompanyModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <form onsubmit="handleSaveAddCompany(event)" class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-slate-300 mb-1">Company Name</label>
-                    <input type="text" id="compName" required placeholder="Apex Global Software Pvt Ltd" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                    <label class="block text-slate-700 mb-1 font-semibold">Company Name</label>
+                    <input type="text" id="compName" required placeholder="Apex Global Software Pvt Ltd" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-300 mb-1">EPF Code</label>
-                        <input type="text" id="compEpf" placeholder="MH/BAN/0045812" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">EPF Code</label>
+                        <input type="text" id="compEpf" placeholder="MH/BAN/0045812" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-slate-300 mb-1">ESI Code</label>
-                        <input type="text" id="compEsi" placeholder="31000458120001001" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">ESI Code</label>
+                        <input type="text" id="compEsi" placeholder="31000458120001001" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-300 mb-1">PAN No</label>
-                        <input type="text" id="compPan" placeholder="AAACA1234F" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">PAN No</label>
+                        <input type="text" id="compPan" placeholder="AAACA1234F" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-slate-300 mb-1">State</label>
-                        <select id="compState" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">State</label>
+                        <select id="compState" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                             <option value="Maharashtra">Maharashtra</option>
                             <option value="Karnataka">Karnataka</option>
                             <option value="West Bengal">West Bengal</option>
@@ -562,24 +617,24 @@
                         </select>
                     </div>
                 </div>
-                <div class="p-3 bg-slate-950/70 border border-slate-800/80 rounded-xl space-y-2">
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
                     <label class="block font-semibold text-brand-400">Statutory Contribution Rates (%)</label>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-slate-400 text-[10px]">Employee EPF %</label>
-                            <input type="number" step="0.01" id="compEpfEmpRate" value="12.0" placeholder="12.0" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="compEpfEmpRate" value="12.0" placeholder="12.0" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                         <div>
                             <label class="block text-slate-400 text-[10px]">Employer EPF %</label>
-                            <input type="number" step="0.01" id="compEpfEmployerRate" value="12.0" placeholder="12.0" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="compEpfEmployerRate" value="12.0" placeholder="12.0" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                         <div>
                             <label class="block text-slate-400 text-[10px]">Employee ESI %</label>
-                            <input type="number" step="0.01" id="compEsiEmpRate" value="0.75" placeholder="0.75" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="compEsiEmpRate" value="0.75" placeholder="0.75" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                         <div>
                             <label class="block text-slate-400 text-[10px]">Employer ESI %</label>
-                            <input type="number" step="0.01" id="compEsiEmployerRate" value="3.25" placeholder="3.25" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="compEsiEmployerRate" value="3.25" placeholder="3.25" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                     </div>
                     <p class="text-[10px] text-slate-500">Default: 12% PF & 0.75% / 3.25% ESI. You can customize per business requirements.</p>
@@ -592,37 +647,37 @@
     </div>
 
     <!-- MODAL: EDIT COMPANY & STATUTORY RATES -->
-    <div id="editCompanyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-white flex items-center gap-2">
+    <div id="editCompanyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-slate-800">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 class="font-bold text-slate-900 flex items-center gap-2">
                     <i data-lucide="edit-3" class="w-4 h-4 text-sky-400"></i> Edit Company & Statutory Rates
                 </h3>
-                <button onclick="closeEditCompanyModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeEditCompanyModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <form onsubmit="handleSaveEditCompany(event)" class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-slate-300 mb-1">Company Name</label>
-                    <input type="text" id="editCompName" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                    <label class="block text-slate-700 mb-1 font-semibold">Company Name</label>
+                    <input type="text" id="editCompName" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-300 mb-1">EPF Code</label>
-                        <input type="text" id="editCompEpf" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">EPF Code</label>
+                        <input type="text" id="editCompEpf" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-slate-300 mb-1">ESI Code</label>
-                        <input type="text" id="editCompEsi" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">ESI Code</label>
+                        <input type="text" id="editCompEsi" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-300 mb-1">PAN No</label>
-                        <input type="text" id="editCompPan" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">PAN No</label>
+                        <input type="text" id="editCompPan" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-slate-300 mb-1">State</label>
-                        <select id="editCompState" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">State</label>
+                        <select id="editCompState" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                             <option value="Maharashtra">Maharashtra</option>
                             <option value="Karnataka">Karnataka</option>
                             <option value="West Bengal">West Bengal</option>
@@ -631,24 +686,24 @@
                         </select>
                     </div>
                 </div>
-                <div class="p-3 bg-slate-950/70 border border-slate-800/80 rounded-xl space-y-2">
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
                     <label class="block font-semibold text-brand-400">Custom Statutory Contribution Rates (%)</label>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-slate-400 text-[10px]">Employee EPF %</label>
-                            <input type="number" step="0.01" id="editCompEpfEmpRate" placeholder="12.0" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="editCompEpfEmpRate" placeholder="12.0" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                         <div>
                             <label class="block text-slate-400 text-[10px]">Employer EPF %</label>
-                            <input type="number" step="0.01" id="editCompEpfEmployerRate" placeholder="12.0" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="editCompEpfEmployerRate" placeholder="12.0" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                         <div>
                             <label class="block text-slate-400 text-[10px]">Employee ESI %</label>
-                            <input type="number" step="0.01" id="editCompEsiEmpRate" placeholder="0.75" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="editCompEsiEmpRate" placeholder="0.75" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                         <div>
                             <label class="block text-slate-400 text-[10px]">Employer ESI %</label>
-                            <input type="number" step="0.01" id="editCompEsiEmployerRate" placeholder="3.25" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="editCompEsiEmployerRate" placeholder="3.25" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                     </div>
                     <p class="text-[10px] text-slate-500">Changes apply automatically to future payroll runs for all company employees.</p>
@@ -666,27 +721,27 @@
     </div>
 
     <!-- MODAL: GRANT LOAN / ADVANCE -->
-    <div id="grantLoanModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div id="grantLoanModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-slate-800">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h3 class="font-bold text-white">Grant Employee Loan / Salary Advance</h3>
-                <button onclick="closeGrantLoanModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeGrantLoanModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <form onsubmit="handleSaveGrantLoan(event)" class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-slate-300 mb-1">Select Employee</label>
-                    <select id="loanEmpSelect" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                    <label class="block text-slate-700 mb-1 font-semibold">Select Employee</label>
+                    <select id="loanEmpSelect" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                         <!-- Injected -->
                     </select>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-300 mb-1">Loan / Advance Amount (₹)</label>
-                        <input type="number" id="loanAmount" required placeholder="50000" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">Loan / Advance Amount (₹)</label>
+                        <input type="number" id="loanAmount" required placeholder="50000" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-slate-300 mb-1">Total Months (EMIs)</label>
-                        <input type="number" id="loanEmis" required placeholder="10" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">Total Months (EMIs)</label>
+                        <input type="number" id="loanEmis" required placeholder="10" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
                 <button type="submit" class="btn-tactile w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-semibold rounded-xl text-xs shadow-lg shadow-amber-600/20">
@@ -697,32 +752,32 @@
     </div>
 
     <!-- OWNER EDIT TENANT MODAL -->
-    <div id="ownerEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div id="ownerEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-slate-800">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h3 class="font-bold text-white text-base">edit tenant details</h3>
-                <button onclick="closeOwnerEditModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeOwnerEditModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <form onsubmit="handleSaveOwnerEdit(event)" class="space-y-3 text-xs">
                 <input type="hidden" id="editTenantId">
                 <div>
                     <label class="block text-slate-300 font-semibold mb-1">organization name</label>
-                    <input type="text" id="editTenantName" required class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                    <input type="text" id="editTenantName" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-slate-300 font-semibold mb-1">email</label>
-                        <input type="email" id="editTenantEmail" required class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                        <input type="email" id="editTenantEmail" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
                         <label class="block text-slate-300 font-semibold mb-1">phone</label>
-                        <input type="text" id="editTenantPhone" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                        <input type="text" id="editTenantPhone" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-slate-300 font-semibold mb-1">plan tier</label>
-                        <select id="editTenantPlan" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                        <select id="editTenantPlan" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                             <option value="6_months">6-Month Plan (₹12K)</option>
                             <option value="1_year">1-Year Plan (₹20K)</option>
                             <option value="lifetime">Lifetime License (₹50K)</option>
@@ -730,7 +785,7 @@
                     </div>
                     <div>
                         <label class="block text-slate-300 font-semibold mb-1">account status</label>
-                        <select id="editTenantStatus" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                        <select id="editTenantStatus" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                             <option value="active">ACTIVE</option>
                             <option value="locked">LOCKED</option>
                         </select>
@@ -739,11 +794,11 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-slate-300 font-semibold mb-1">expiry date (YYYY-MM-DD)</label>
-                        <input type="date" id="editTenantExpiry" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                        <input type="date" id="editTenantExpiry" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
                         <label class="block text-slate-300 font-semibold mb-1">price paid (₹)</label>
-                        <input type="number" id="editTenantPrice" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white">
+                        <input type="number" id="editTenantPrice" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
                 <button type="submit" class="btn-tactile w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl text-xs transition shadow-lg shadow-brand-600/20">
@@ -754,17 +809,17 @@
     </div>
 
     <!-- OWNER CUSTOM EXTENSION MODAL -->
-    <div id="customExtendModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div id="customExtendModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-slate-800">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h3 class="font-bold text-white text-base">custom subscription extension</h3>
-                <button onclick="closeCustomExtendModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeCustomExtendModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <p class="text-slate-400 text-xs">enter the exact number of custom days to extend subscription for <b id="extendOrgName" class="text-white"></b>.</p>
             <form onsubmit="handleSaveCustomExtend(event)" class="space-y-4">
                 <div>
                     <label class="block text-slate-300 text-xs font-semibold mb-1">number of days to add</label>
-                    <input type="number" id="customDaysInput" required min="1" max="3650" placeholder="e.g. 15, 45, 90, 180, 365" class="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm">
+                    <input type="number" id="customDaysInput" required min="1" max="3650" placeholder="e.g. 15, 45, 90, 180, 365" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500 text-sm">
                 </div>
                 <div class="flex gap-2">
                     <button type="button" onclick="setPresetDays(15)" class="btn-tactile flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg font-semibold">+15 days</button>
@@ -780,51 +835,51 @@
     </div>
 
     <!-- MODAL: ADD EMPLOYEE -->
-    <div id="addEmpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+    <div id="addEmpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl text-slate-800">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
                 <h3 class="font-bold text-white">add new employee record</h3>
-                <button onclick="closeAddEmployeeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeAddEmployeeModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <form onsubmit="handleSaveEmployee(event)" class="space-y-3 text-xs">
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-300 mb-1">emp code</label>
-                        <input type="text" id="empCode" required placeholder="EMP004" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">emp code</label>
+                        <input type="text" id="empCode" required placeholder="EMP004" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-slate-300 mb-1">full name</label>
-                        <input type="text" id="empName" required placeholder="Vikram Singh" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-slate-300 mb-1">designation</label>
-                        <input type="text" id="empDesignation" placeholder="Software Engineer" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
-                    </div>
-                    <div>
-                        <label class="block text-slate-300 mb-1">department</label>
-                        <input type="text" id="empDepartment" placeholder="IT" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">full name</label>
+                        <input type="text" id="empName" required placeholder="Vikram Singh" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-300 mb-1">basic monthly pay (₹)</label>
-                        <input type="number" id="empBasic" required placeholder="30000" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">designation</label>
+                        <input type="text" id="empDesignation" placeholder="Software Engineer" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-slate-300 mb-1">hra monthly (₹)</label>
-                        <input type="number" id="empHra" required placeholder="15000" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">department</label>
+                        <input type="text" id="empDepartment" placeholder="IT" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-300 mb-1">uan number</label>
-                        <input type="text" id="empUan" placeholder="100987654321" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">basic monthly pay (₹)</label>
+                        <input type="number" id="empBasic" required placeholder="30000" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-slate-300 mb-1">bank account no</label>
-                        <input type="text" id="empBankAcc" placeholder="501000123456" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">hra monthly (₹)</label>
+                        <input type="number" id="empHra" required placeholder="15000" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-700 mb-1 font-semibold">uan number</label>
+                        <input type="text" id="empUan" placeholder="100987654321" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 mb-1 font-semibold">bank account no</label>
+                        <input type="text" id="empBankAcc" placeholder="501000123456" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
                 <div class="flex items-center gap-4 pt-2">
@@ -838,7 +893,7 @@
                         <input type="checkbox" id="empPtDeduct" checked class="rounded border-slate-800 text-brand-600"> deduct pt
                     </label>
                 </div>
-                <div class="p-3 bg-slate-950/70 border border-slate-800/80 rounded-xl space-y-2">
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
                     <div class="flex items-center justify-between">
                         <label class="block font-semibold text-brand-400">Custom Statutory Rates Override (Optional)</label>
                         <span class="text-[10px] text-slate-500">Leave blank for company defaults</span>
@@ -846,11 +901,11 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-slate-400 text-[10px]">Custom EPF Rate (%)</label>
-                            <input type="number" step="0.01" id="empCustomEpfRate" placeholder="e.g. 10.0 or 12.0" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="empCustomEpfRate" placeholder="e.g. 10.0 or 12.0" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                         <div>
                             <label class="block text-slate-400 text-[10px]">Custom ESI Rate (%)</label>
-                            <input type="number" step="0.01" id="empCustomEsiRate" placeholder="e.g. 0.50 or 0.75" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="empCustomEsiRate" placeholder="e.g. 0.50 or 0.75" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                     </div>
                 </div>
@@ -864,54 +919,54 @@
     </div>
 
     <!-- MODAL: EDIT EMPLOYEE -->
-    <div id="editEmpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-white flex items-center gap-2">
+    <div id="editEmpModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl text-slate-800">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 class="font-bold text-slate-900 flex items-center gap-2">
                     <i data-lucide="user-cog" class="w-4 h-4 text-sky-400"></i> Edit Employee Record & Statutory Rates
                 </h3>
-                <button onclick="closeEditEmployeeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeEditEmployeeModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <form onsubmit="handleSaveEditEmployee(event)" class="space-y-3 text-xs">
                 <input type="hidden" id="editEmpId">
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-300 mb-1">emp code</label>
-                        <input type="text" id="editEmpCode" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">emp code</label>
+                        <input type="text" id="editEmpCode" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-slate-300 mb-1">full name</label>
-                        <input type="text" id="editEmpName" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-slate-300 mb-1">designation</label>
-                        <input type="text" id="editEmpDesignation" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
-                    </div>
-                    <div>
-                        <label class="block text-slate-300 mb-1">department</label>
-                        <input type="text" id="editEmpDepartment" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">full name</label>
+                        <input type="text" id="editEmpName" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-300 mb-1">basic monthly pay (₹)</label>
-                        <input type="number" id="editEmpBasic" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">designation</label>
+                        <input type="text" id="editEmpDesignation" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-slate-300 mb-1">hra monthly (₹)</label>
-                        <input type="number" id="editEmpHra" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">department</label>
+                        <input type="text" id="editEmpDepartment" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-slate-300 mb-1">uan number</label>
-                        <input type="text" id="editEmpUan" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">basic monthly pay (₹)</label>
+                        <input type="number" id="editEmpBasic" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-slate-300 mb-1">bank account no</label>
-                        <input type="text" id="editEmpBankAcc" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white">
+                        <label class="block text-slate-700 mb-1 font-semibold">hra monthly (₹)</label>
+                        <input type="number" id="editEmpHra" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-700 mb-1 font-semibold">uan number</label>
+                        <input type="text" id="editEmpUan" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 mb-1 font-semibold">bank account no</label>
+                        <input type="text" id="editEmpBankAcc" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:bg-white focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
                 <div class="flex items-center gap-4 pt-1">
@@ -925,7 +980,7 @@
                         <input type="checkbox" id="editEmpPtDeduct" class="rounded border-slate-800 text-brand-600"> deduct pt
                     </label>
                 </div>
-                <div class="p-3 bg-slate-950/70 border border-slate-800/80 rounded-xl space-y-2">
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
                     <div class="flex items-center justify-between">
                         <label class="block font-semibold text-brand-400">Custom Statutory Rates Override</label>
                         <span class="text-[10px] text-slate-500">Leave blank for company defaults</span>
@@ -933,11 +988,11 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-slate-400 text-[10px]">Custom EPF Rate (%)</label>
-                            <input type="number" step="0.01" id="editEmpCustomEpfRate" placeholder="Company Default (12%)" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="editEmpCustomEpfRate" placeholder="Company Default (12%)" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                         <div>
                             <label class="block text-slate-400 text-[10px]">Custom ESI Rate (%)</label>
-                            <input type="number" step="0.01" id="editEmpCustomEsiRate" placeholder="Company Default (0.75%)" class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs">
+                            <input type="number" step="0.01" id="editEmpCustomEsiRate" placeholder="Company Default (0.75%)" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500 text-xs">
                         </div>
                     </div>
                 </div>
@@ -951,31 +1006,31 @@
     </div>
 
     <!-- MODAL: STATUTORY CALCULATORS (GRATUITY & BONUS) -->
-    <div id="calcModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+    <div id="calcModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-slate-800">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
                     <i data-lucide="calculator" class="w-4 h-4 text-indigo-400"></i> statutory gratuity & bonus tool
                 </h3>
-                <button onclick="closeCalculatorsModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+                <button onclick="closeCalculatorsModal()" class="text-slate-400 hover:text-slate-700"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
             <div class="space-y-4 text-xs">
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
                     <h4 class="font-bold text-brand-400">gratuity calculator (15/26 formula)</h4>
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="number" id="gratBasic" placeholder="basic pay (e.g. 30000)" class="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white">
-                        <input type="number" id="gratYears" placeholder="years of service (e.g. 6)" class="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white">
+                        <input type="number" id="gratBasic" placeholder="basic pay (e.g. 30000)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500">
+                        <input type="number" id="gratYears" placeholder="years of service (e.g. 6)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500">
                     </div>
                     <button onclick="runGratuityCalc()" class="btn-tactile w-full py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg">calculate gratuity</button>
                     <div id="gratResult" class="text-emerald-400 font-bold hidden pt-1"></div>
                 </div>
 
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
                     <h4 class="font-bold text-emerald-400">statutory bonus calculator (8.33%)</h4>
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="number" id="bonusBasic" placeholder="basic pay (e.g. 15000)" class="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white">
-                        <input type="number" id="bonusRate" value="8.33" placeholder="rate %" class="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white">
+                        <input type="number" id="bonusBasic" placeholder="basic pay (e.g. 15000)" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500">
+                        <input type="number" id="bonusRate" value="8.33" placeholder="rate %" class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-brand-500">
                     </div>
                     <button onclick="runBonusCalc()" class="btn-tactile w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg">calculate annual bonus</button>
                     <div id="bonusResult" class="text-emerald-400 font-bold hidden pt-1"></div>
@@ -984,9 +1039,9 @@
         </div>
     </div>
     <!-- MODAL: PLATFORM & GATEWAY SETTINGS (GOOGLE EMAIL & RAZORPAY) -->
-    <div id="googleSettingsModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 backdrop-blur-md hidden p-4" onclick="if(event.target === this) closeGoogleSettingsModal()">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative max-h-[92vh] overflow-y-auto" onclick="event.stopPropagation()">
-            <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+    <div id="googleSettingsModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-xs hidden p-4" onclick="if(event.target === this) closeGoogleSettingsModal()">
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative max-h-[92vh] overflow-y-auto text-slate-800" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400">
                         <i data-lucide="sliders" class="w-4 h-4"></i>
@@ -1003,7 +1058,7 @@
 
             <form onsubmit="handleSaveGoogleSettings(event)" class="space-y-4">
                 <!-- SECTION 1: RAZORPAY PAYMENT GATEWAY -->
-                <div class="p-4 bg-slate-950/90 rounded-2xl border border-slate-800/80 space-y-3">
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                     <div class="flex items-center justify-between">
                         <h4 class="text-xs font-bold text-white flex items-center gap-2">
                             <i data-lucide="credit-card" class="w-4 h-4 text-blue-400"></i> Razorpay Payment Gateway
@@ -1016,11 +1071,11 @@
                     <div class="space-y-2.5">
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-300 mb-1">Razorpay Key ID</label>
-                            <input type="text" id="razorpayKeyIdInput" placeholder="rzp_test_... or rzp_live_..." class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs font-mono focus:border-brand-500 focus:outline-none">
+                            <input type="text" id="razorpayKeyIdInput" placeholder="rzp_test_... or rzp_live_..." class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs font-mono focus:border-brand-500 focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-300 mb-1">Razorpay Key Secret</label>
-                            <input type="password" id="razorpayKeySecretInput" placeholder="Enter fresh Key Secret" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs font-mono focus:border-brand-500 focus:outline-none">
+                            <input type="password" id="razorpayKeySecretInput" placeholder="Enter fresh Key Secret" class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs font-mono focus:border-brand-500 focus:outline-none">
                             <p class="text-slate-500 text-[10px] mt-1">If regenerated on Razorpay, paste the newly generated Secret here. Kept encrypted on backend.</p>
                         </div>
                     </div>
@@ -1033,7 +1088,7 @@
                 </div>
 
                 <!-- SECTION 2: GOOGLE EMAIL 2FA DISPATCH -->
-                <div class="p-4 bg-slate-950/90 rounded-2xl border border-slate-800/80 space-y-3">
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
                     <h4 class="text-xs font-bold text-white flex items-center gap-2">
                         <i data-lucide="mail" class="w-4 h-4 text-emerald-400"></i> Google Mail 2FA Dispatch
                     </h4>
@@ -1043,16 +1098,16 @@
                     <div class="space-y-2.5">
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-300 mb-1">Sender Email</label>
-                            <input type="email" id="googleSenderEmail" value="gulatihriday.003@gmail.com" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs" readonly>
+                            <input type="email" id="googleSenderEmail" value="gulatihriday.003@gmail.com" class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs" readonly>
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-300 mb-1">Google App Password (16 characters)</label>
-                            <input type="password" id="googleAppPasswordInput" placeholder="xxxx xxxx xxxx xxxx" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs font-mono focus:border-brand-500 focus:outline-none">
+                            <input type="password" id="googleAppPasswordInput" placeholder="xxxx xxxx xxxx xxxx" class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs font-mono focus:border-brand-500 focus:outline-none">
                             <p class="text-slate-500 text-[10px] mt-1">Used for direct Google SMTP delivery on local/unblocked networks.</p>
                         </div>
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-300 mb-1">Google Apps Script Web App URL (for Render Cloud)</label>
-                            <input type="url" id="googleScriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs font-mono focus:border-brand-500 focus:outline-none">
+                            <input type="url" id="googleScriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 text-xs font-mono focus:border-brand-500 focus:outline-none">
                             <p class="text-slate-500 text-[10px] mt-1">Bypasses Render Free SMTP port block over HTTPS (Port 443).</p>
                         </div>
                     </div>
@@ -1601,7 +1656,7 @@
             const container = document.getElementById("liveToastContainer");
             if (!container) return;
             const toast = document.createElement("div");
-            toast.className = "pointer-events-auto bg-slate-900/95 border border-brand-500/60 shadow-2xl rounded-2xl p-4 text-xs font-bold text-white flex items-center gap-3 transition-all duration-300 translate-x-10 opacity-0 backdrop-blur-md";
+            toast.className = "pointer-events-auto bg-white border border-brand-200 shadow-xl rounded-2xl p-4 text-xs font-bold text-slate-900 flex items-center gap-3 transition-all duration-300 translate-x-10 opacity-0";
             toast.innerHTML = `
                 <div class="w-8 h-8 rounded-xl bg-brand-600/20 text-brand-400 flex items-center justify-center shrink-0 border border-brand-500/40">
                     <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i>
@@ -1663,16 +1718,16 @@
                     } else {
                         pendingList.forEach(r => {
                             pendingTbody.innerHTML += `
-                                <tr class="bg-amber-950/20 border-b border-amber-500/10 hover:bg-amber-950/30 transition-colors">
-                                    <td class="p-4 font-bold text-white">${r.name}</td>
-                                    <td class="p-4 font-mono font-semibold text-brand-300">${r.admin_username || 'N/A'}</td>
-                                    <td class="p-4 font-semibold text-slate-200">
+                                <tr class="bg-amber-50/50 border-b border-amber-200 hover:bg-amber-50 transition-colors">
+                                    <td class="p-4 font-bold text-slate-900">${r.name}</td>
+                                    <td class="p-4 font-mono font-semibold text-brand-600">${r.admin_username || 'N/A'}</td>
+                                    <td class="p-4 font-semibold text-slate-700">
                                         ${r.email}
-                                        <span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">✓ Google Email</span>
+                                        <span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-700">✓ Google Email</span>
                                     </td>
-                                    <td class="p-4 text-slate-400 font-mono">${r.phone || 'N/A'}</td>
-                                    <td class="p-4 font-bold text-amber-400">${r.plan_type.toUpperCase()}</td>
-                                    <td class="p-4 font-mono text-slate-400">${r.created_at || 'Recently'}</td>
+                                    <td class="p-4 text-slate-600 font-mono">${r.phone || 'N/A'}</td>
+                                    <td class="p-4 font-bold text-amber-700">${r.plan_type.toUpperCase()}</td>
+                                    <td class="p-4 font-mono text-slate-500">${r.created_at || 'Recently'}</td>
                                     <td class="p-4 text-right space-x-1.5">
                                         <button onclick="approveOwnerRequest('${r.id}', '${r.name}')" class="btn-tactile px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs shadow-md">
                                             ✅ Approve Access
@@ -1693,26 +1748,26 @@
                     tbody.innerHTML = "";
                     currentTenantsCache.forEach(t => {
                         const statusBadge = t.subscription_status === 'active' 
-                            ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">ACTIVE</span>`
-                            : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 border border-rose-500/30 text-rose-400">LOCKED</span>`;
+                            ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 border border-emerald-200 text-emerald-700">ACTIVE</span>`
+                            : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 border border-rose-200 text-rose-700">LOCKED</span>`;
 
                         const row = `
-                            <tr class="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                                <td class="p-4 font-bold text-white">${t.name}</td>
-                                <td class="p-4">${t.email}<br><span class="text-slate-500">${t.phone || ''}</span></td>
-                                <td class="p-4 font-semibold text-brand-400">${t.plan_type.toUpperCase()}</td>
-                                <td class="p-4 font-mono">${t.expiry_date || 'N/A'}</td>
-                                <td class="p-4 font-mono text-emerald-400 font-bold">₹${t.price_paid.toLocaleString()}</td>
+                            <tr class="border-b border-slate-100 hover:bg-slate-50/70 transition-colors">
+                                <td class="p-4 font-bold text-slate-900">${t.name}</td>
+                                <td class="p-4 text-slate-700">${t.email}<br><span class="text-slate-500">${t.phone || ''}</span></td>
+                                <td class="p-4 font-semibold text-brand-600">${t.plan_type.toUpperCase()}</td>
+                                <td class="p-4 font-mono text-slate-600">${t.expiry_date || 'N/A'}</td>
+                                <td class="p-4 font-mono text-emerald-700 font-bold">₹${t.price_paid.toLocaleString()}</td>
                                 <td class="p-4">${statusBadge}</td>
                                 <td class="p-4 text-right space-x-1">
-                                    <button onclick="openOwnerEditModal('${t.id}')" class="btn-tactile px-2 py-1 bg-amber-950/80 hover:bg-amber-900 text-amber-300 border border-amber-800/80 text-[10px] font-bold rounded-lg">edit</button>
-                                    <button onclick="ownerUndo('${t.id}')" class="btn-tactile px-2 py-1 bg-sky-950/80 hover:bg-sky-900 text-sky-300 border border-sky-800/80 text-[10px] font-bold rounded-lg">undo</button>
+                                    <button onclick="openOwnerEditModal('${t.id}')" class="btn-tactile px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-bold rounded-lg">edit</button>
+                                    <button onclick="ownerUndo('${t.id}')" class="btn-tactile px-2 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-[10px] font-bold rounded-lg">undo</button>
                                     ${t.subscription_status === 'active' 
-                                        ? `<button onclick="ownerLock('${t.id}')" class="btn-tactile px-2 py-1 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/80 text-[10px] font-bold rounded-lg">lock</button>`
-                                        : `<button onclick="ownerUnlock('${t.id}')" class="btn-tactile px-2 py-1 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/80 text-[10px] font-bold rounded-lg">unlock</button>`
+                                        ? `<button onclick="ownerLock('${t.id}')" class="btn-tactile px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold rounded-lg">lock</button>`
+                                        : `<button onclick="ownerUnlock('${t.id}')" class="btn-tactile px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[10px] font-bold rounded-lg">unlock</button>`
                                     }
-                                    <button onclick="openCustomExtendModal('${t.id}', '${t.name}')" class="btn-tactile px-2 py-1 bg-brand-950/80 hover:bg-brand-900 text-brand-300 border border-brand-800/80 text-[10px] font-bold rounded-lg">+ custom</button>
-                                    <button onclick="ownerDelete('${t.id}')" class="btn-tactile p-1 bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/80 text-[10px] font-bold rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                                    <button onclick="openCustomExtendModal('${t.id}', '${t.name}')" class="btn-tactile px-2 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 text-[10px] font-bold rounded-lg">+ custom</button>
+                                    <button onclick="ownerDelete('${t.id}')" class="btn-tactile p-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[10px] font-bold rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                                 </td>
                             </tr>
                         `;
@@ -2032,18 +2087,34 @@
                 const res = await fetch(`${API_BASE}/companies`, {
                     headers: {"Authorization": `Bearer ${authToken}`}
                 });
+                if (!res.ok) throw new Error("Failed to load companies");
                 companiesList = await res.json();
-                const select = document.getElementById("companySelect");
-                select.innerHTML = "";
                 
-                companiesList.forEach(c => {
-                    select.innerHTML += `<option value="${c.id}">${c.company_name} (${c.epf_code || 'PF Code: N/A'})</option>`;
-                });
+                const noCompView = document.getElementById("noCompanyOnboarding");
+                const workspaceView = document.getElementById("companyWorkspace");
+                const select = document.getElementById("companySelect");
 
-                if (companiesList.length > 0) {
-                    currentCompanyId = companiesList[0].id;
+                if (!companiesList || companiesList.length === 0) {
+                    currentCompanyId = null;
+                    if (noCompView) noCompView.classList.remove("hidden");
+                    if (workspaceView) workspaceView.classList.add("hidden");
+                } else {
+                    if (noCompView) noCompView.classList.add("hidden");
+                    if (workspaceView) workspaceView.classList.remove("hidden");
+
+                    if (select) {
+                        select.innerHTML = "";
+                        companiesList.forEach(c => {
+                            select.innerHTML += `<option value="${c.id}">${c.company_name} (${c.epf_code || 'PF Code: N/A'})</option>`;
+                        });
+                        if (!currentCompanyId || !companiesList.some(c => c.id === currentCompanyId)) {
+                            currentCompanyId = companiesList[0].id;
+                        }
+                        select.value = currentCompanyId;
+                    }
                     loadEmployees();
                 }
+                if (window.lucide) lucide.createIcons();
             } catch (err) {
                 console.error("Load companies error:", err);
             }
@@ -2102,6 +2173,26 @@
                     employees.forEach(e => {
                         loanEmpSelect.innerHTML += `<option value="${e.id}">${e.name} (${e.emp_code})</option>`;
                     });
+                }
+
+                if (!employees || employees.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="p-8 text-center text-slate-500">
+                                <div class="flex flex-col items-center justify-center space-y-3">
+                                    <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400">
+                                        <i data-lucide="users" class="w-6 h-6"></i>
+                                    </div>
+                                    <p class="font-semibold text-slate-700 text-sm">No employees registered yet in this company.</p>
+                                    <button onclick="openAddEmployeeModal()" class="btn-tactile px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-xs">
+                                        <i data-lucide="user-plus" class="w-4 h-4"></i> Add First Employee
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    if (window.lucide) lucide.createIcons();
+                    return;
                 }
 
                 employees.forEach(e => {
@@ -2167,12 +2258,12 @@
                     tbody.innerHTML += `
                         <tr>
                             <td class="p-4 font-bold text-white">${e.name} (${e.emp_code})</td>
-                            <td class="p-4"><input type="number" id="tw_${e.id}" value="${att.total_working_days}" class="w-16 px-2 py-1 bg-slate-950 border border-slate-800 rounded text-center"></td>
-                            <td class="p-4"><input type="number" id="dw_${e.id}" value="${att.days_worked}" class="w-16 px-2 py-1 bg-slate-950 border border-slate-800 rounded text-center"></td>
-                            <td class="p-4"><input type="number" id="cl_${e.id}" value="${att.casual_leaves}" class="w-16 px-2 py-1 bg-slate-950 border border-slate-800 rounded text-center"></td>
-                            <td class="p-4"><input type="number" id="ml_${e.id}" value="${att.medical_leaves}" class="w-16 px-2 py-1 bg-slate-950 border border-slate-800 rounded text-center"></td>
-                            <td class="p-4"><input type="number" id="lop_${e.id}" value="${att.loss_of_pay_days}" class="w-16 px-2 py-1 bg-slate-950 border border-slate-800 text-rose-400 font-bold rounded text-center"></td>
-                            <td class="p-4"><input type="number" id="ot_${e.id}" value="${att.overtime_hours}" class="w-16 px-2 py-1 bg-slate-950 border border-slate-800 text-emerald-400 font-bold rounded text-center"></td>
+                            <td class="p-4"><input type="number" id="tw_${e.id}" value="${att.total_working_days}" class="w-16 px-2 py-1 bg-white border border-slate-300 rounded text-center text-slate-900 font-semibold focus:border-brand-500"></td>
+                            <td class="p-4"><input type="number" id="dw_${e.id}" value="${att.days_worked}" class="w-16 px-2 py-1 bg-white border border-slate-300 rounded text-center text-slate-900 font-semibold focus:border-brand-500"></td>
+                            <td class="p-4"><input type="number" id="cl_${e.id}" value="${att.casual_leaves}" class="w-16 px-2 py-1 bg-white border border-slate-300 rounded text-center text-slate-900 font-semibold focus:border-brand-500"></td>
+                            <td class="p-4"><input type="number" id="ml_${e.id}" value="${att.medical_leaves}" class="w-16 px-2 py-1 bg-white border border-slate-300 rounded text-center text-slate-900 font-semibold focus:border-brand-500"></td>
+                            <td class="p-4"><input type="number" id="lop_${e.id}" value="${att.loss_of_pay_days}" class="w-16 px-2 py-1 bg-white border border-slate-300 text-rose-600 font-bold rounded text-center focus:border-brand-500"></td>
+                            <td class="p-4"><input type="number" id="ot_${e.id}" value="${att.overtime_hours}" class="w-16 px-2 py-1 bg-white border border-slate-300 text-emerald-600 font-bold rounded text-center focus:border-brand-500"></td>
                             <td class="p-4 text-right">
                                 <button onclick="saveSingleAttendance('${e.id}')" class="btn-tactile px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded text-xs">save</button>
                             </td>
@@ -2343,10 +2434,11 @@
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
-            if (data.success) {
-                alert("New company created successfully!");
+            if (res.ok && (data.success || data.company_id || data.id)) {
+                alert("🎉 New company created successfully! Your workspace is now unlocked.");
                 closeAddCompanyModal();
-                loadCompanies();
+                currentCompanyId = data.company_id || data.id;
+                await loadCompanies();
             } else {
                 alert(data.detail || "Failed to create company.");
             }
@@ -2455,11 +2547,32 @@
         }
 
         // MODALS: ADD & EDIT EMPLOYEE
-        function openAddEmployeeModal() { document.getElementById("addEmpModal").classList.remove("hidden"); }
+        function openAddEmployeeModal() {
+            if (!currentCompanyId || !companiesList || companiesList.length === 0) {
+                alert("⚠️ Please create a company profile first before adding employees.");
+                openAddCompanyModal();
+                return;
+            }
+            // Reset input values
+            const codeEl = document.getElementById("empCode"); if (codeEl) codeEl.value = "";
+            const nameEl = document.getElementById("empName"); if (nameEl) nameEl.value = "";
+            const desigEl = document.getElementById("empDesignation"); if (desigEl) desigEl.value = "";
+            const deptEl = document.getElementById("empDepartment"); if (deptEl) deptEl.value = "";
+            const basicEl = document.getElementById("empBasic"); if (basicEl) basicEl.value = "";
+            const hraEl = document.getElementById("empHra"); if (hraEl) hraEl.value = "";
+            const uanEl = document.getElementById("empUan"); if (uanEl) uanEl.value = "";
+            const bankEl = document.getElementById("empBankAcc"); if (bankEl) bankEl.value = "";
+            document.getElementById("addEmpModal").classList.remove("hidden");
+        }
         function closeAddEmployeeModal() { document.getElementById("addEmpModal").classList.add("hidden"); }
 
         async function handleSaveEmployee(e) {
             e.preventDefault();
+            if (!currentCompanyId) {
+                alert("⚠️ No company selected. Please create or select a company first.");
+                openAddCompanyModal();
+                return;
+            }
             const pfRate = document.getElementById("empCustomEpfRate").value;
             const esiRate = document.getElementById("empCustomEsiRate").value;
 

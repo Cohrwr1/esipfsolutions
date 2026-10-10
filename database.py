@@ -101,6 +101,10 @@ def init_db():
             ifsc_code TEXT,
             contact_email TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            epf_emp_rate REAL DEFAULT 12.0,
+            epf_employer_rate REAL DEFAULT 12.0,
+            esi_emp_rate REAL DEFAULT 0.75,
+            esi_employer_rate REAL DEFAULT 3.25,
             FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE
         )
     ''')
@@ -134,6 +138,8 @@ def init_db():
             pt_deduct INTEGER DEFAULT 1,
             tax_regime TEXT DEFAULT 'new',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            custom_epf_rate REAL DEFAULT NULL,
+            custom_esi_rate REAL DEFAULT NULL,
             FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE,
             FOREIGN KEY (company_id) REFERENCES companies (id) ON DELETE CASCADE
         )
@@ -217,6 +223,20 @@ def init_db():
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
+    # Safe migrations for customizable statutory rates
+    for alter_sql in [
+        "ALTER TABLE companies ADD COLUMN epf_emp_rate REAL DEFAULT 12.0",
+        "ALTER TABLE companies ADD COLUMN epf_employer_rate REAL DEFAULT 12.0",
+        "ALTER TABLE companies ADD COLUMN esi_emp_rate REAL DEFAULT 0.75",
+        "ALTER TABLE companies ADD COLUMN esi_employer_rate REAL DEFAULT 3.25",
+        "ALTER TABLE employees ADD COLUMN custom_epf_rate REAL DEFAULT NULL",
+        "ALTER TABLE employees ADD COLUMN custom_esi_rate REAL DEFAULT NULL"
+    ]:
+        try:
+            cursor.execute(alter_sql)
+        except Exception:
+            pass
 
     conn.commit()
     conn.close()

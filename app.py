@@ -1,10 +1,19 @@
 import datetime
 import uuid
 import os
+import sys
 import threading
 import hmac
 import hashlib
 from dotenv import load_dotenv
+
+# Ensure root and backend directory are in python path
+curr_dir = os.path.dirname(os.path.abspath(__file__))
+if curr_dir not in sys.path:
+    sys.path.insert(0, curr_dir)
+b_dir = os.path.join(curr_dir, "backend")
+if os.path.exists(b_dir) and b_dir not in sys.path:
+    sys.path.insert(0, b_dir)
 
 # Load Razorpay and Environment Configurations
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
@@ -812,7 +821,7 @@ def create_company(req: CompanyReq, current_user: dict = Depends(get_current_use
     ))
     conn.commit()
     conn.close()
-    return {"success": True, "company_id": comp_id}
+    return {"success": True, "company_id": comp_id, "id": comp_id, "message": "Company created successfully"}
 
 @app.put("/api/companies/{comp_id}")
 def update_company(comp_id: str, req: CompanyReq, current_user: dict = Depends(get_current_user)):
@@ -869,6 +878,18 @@ def get_employees(company_id: str, current_user: dict = Depends(get_current_user
 @app.post("/api/employees")
 def add_employee(req: EmployeeReq, current_user: dict = Depends(get_current_user)):
     tenant_id = current_user.get("tenant_id") or "owner_platform_tenant"
+    
+    if not req.company_id:
+        raise HTTPException(status_code=400, detail="A valid Company ID is required to register an employee. Please select or create a company first.")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM companies WHERE id = ? AND (tenant_id = ? OR ? = 'owner')", (req.company_id, tenant_id, current_user.get("role")))
+    comp_row = cursor.fetchone()
+    if not comp_row:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Invalid company selected. Please select an existing company.")
+
     emp_id = f"emp_{uuid.uuid4().hex[:8]}"
     
     conn = get_db_connection()
