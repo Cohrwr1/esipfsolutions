@@ -2,6 +2,30 @@ import datetime
 import uuid
 import os
 import threading
+import hmac
+import hashlib
+from dotenv import load_dotenv
+
+# Load Razorpay and Environment Configurations
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
+load_dotenv()
+
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+
+try:
+    import razorpay
+except ImportError:
+    razorpay = None
+
+def get_razorpay_client():
+    if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
+        raise HTTPException(status_code=500, detail="Razorpay credentials not configured in environment variables.")
+    if not razorpay:
+        raise HTTPException(status_code=500, detail="Razorpay Python SDK is not installed.")
+    return razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
 from fastapi import FastAPI, HTTPException, Depends, Header, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -67,6 +91,7 @@ class RegisterTenantReq(BaseModel):
     mode: Optional[str] = "request_approval" # 'razorpay' or 'request_approval'
     payment_id: Optional[str] = None
     order_id: Optional[str] = None
+    signature: Optional[str] = None
 
 class CompanyReq(BaseModel):
     company_name: str
@@ -196,14 +221,22 @@ class VerifyOtpReq(BaseModel):
     device_token: Optional[str] = None
 
 class PaymentOrderReq(BaseModel):
-    plan_type: str
+    amount: Optional[int] = None # in paise (>= 100 paise)
+    currency: Optional[str] = "INR"
+    receipt: Optional[str] = None
+    plan_type: Optional[str] = None
     tenant_id: Optional[str] = ""
+    notes: Optional[dict] = None
 
 class PaymentVerifyReq(BaseModel):
-    tenant_id: str
-    payment_id: str
-    order_id: str
-    signature: str
+    razorpay_order_id: Optional[str] = None
+    razorpay_payment_id: Optional[str] = None
+    razorpay_signature: Optional[str] = None
+    order_id: Optional[str] = None
+    payment_id: Optional[str] = None
+    signature: Optional[str] = None
+    tenant_id: Optional[str] = ""
+    plan_type: Optional[str] = ""
 
 class Google2faSetupReq(BaseModel):
     username: str
@@ -407,31 +440,105 @@ def verify_otp_endpoint(req: VerifyOtpReq):
         "warning": sub_warning
     }
 
+@app.post("/api/create-order")
 @app.post("/api/payment/create-order")
 def create_payment_order(req: PaymentOrderReq):
+    # Determine amount in paise
     price_map = {"6_months": 12000.0, "1_year": 20000.0, "lifetime": 50000.0}
-    amount = price_map.get(req.plan_type, 20000.0)
-    order_id = f"order_{uuid.uuid4().hex[:12]}"
-    
+    amount_in_paise = None
+
+    if req.amount is not None:
+        amount_in_paise = int(req.amount)
+    elif req.plan_type:
+        price_rupees = price_map.get(req.plan_type, 20000.0)
+        amount_in_paise = int(price_rupees * 100)
+    else:
+        amount_in_paise = 2000000 # Default to 1-year in paise
+
+    # Validation: minimum 100 paise
+    if amount_in_paise < 100:
+        raise HTTPException(status_code=400, detail="Minimum order amount is 100 paise (INR 1.00).")
+
+    currency = (req.currency or "INR").upper()
+    receipt = req.receipt or f"rcpt_{uuid.uuid4().hex[:10]}"
+    notes = req.notes or {}
+    if req.plan_type:
+        notes["plan_type"] = req.plan_type
+    if req.tenant_id:
+        notes["tenant_id"] = req.tenant_id
+
+    client = get_razorpay_client()
+    try:
+        order = client.order.create({
+            "amount": amount_in_paise,
+            "currency": currency,
+            "receipt": receipt,
+            "notes": notes
+        })
+    except Exception as e:
+        err_msg = str(e)
+        if "Authentication failed" in err_msg or "auth" in err_msg.lower() or "401" in err_msg:
+            raise HTTPException(status_code=401, detail="Razorpay Authentication Failed. Invalid Key ID or Secret.")
+        raise HTTPException(status_code=500, detail=f"Razorpay order creation failed: {err_msg}")
+
     return {
         "success": True,
-        "order_id": order_id,
-        "amount": int(amount * 100),
-        "currency": "INR",
-        "plan_type": req.plan_type,
-        "key_id": "rzp_live_esipfsolutions_key_2026"
+        "order_id": order["id"],
+        "amount": order["amount"],
+        "currency": order["currency"],
+        "key_id": RAZORPAY_KEY_ID
     }
 
+@app.post("/api/verify-payment")
 @app.post("/api/payment/verify")
 def verify_payment(req: PaymentVerifyReq):
+    order_id = req.razorpay_order_id or req.order_id
+    payment_id = req.razorpay_payment_id or req.payment_id
+    signature = req.razorpay_signature or req.signature
+
+    if not order_id or not payment_id or not signature:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing required fields for payment verification: order_id, payment_id, and signature are required."
+        )
+
+    if not RAZORPAY_KEY_SECRET:
+        raise HTTPException(status_code=500, detail="RAZORPAY_KEY_SECRET is not configured on the server.")
+
+    # Algorithm: HMAC-SHA256(order_id + "|" + payment_id, KEY_SECRET)
+    message = f"{order_id}|{payment_id}".encode("utf-8")
+    generated_signature = hmac.new(
+        RAZORPAY_KEY_SECRET.encode("utf-8"),
+        message,
+        hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(generated_signature, signature):
+        raise HTTPException(
+            status_code=400,
+            detail="Payment signature verification failed. Signatures do not match."
+        )
+
+    # If tenant_id is provided, activate subscription in database
     if req.tenant_id:
         conn = get_db_connection()
         cursor = conn.cursor()
         today = datetime.date.today()
-        cursor.execute("UPDATE tenants SET subscription_status = 'active', start_date = ? WHERE id = ?", (str(today), req.tenant_id))
+        price_map = {"6_months": 12000.0, "1_year": 20000.0, "lifetime": 50000.0}
+        price = price_map.get(req.plan_type, 20000.0) if req.plan_type else 20000.0
+        cursor.execute(
+            "UPDATE tenants SET subscription_status = 'active', start_date = ?, price_paid = ? WHERE id = ?",
+            (str(today), price, req.tenant_id)
+        )
         conn.commit()
         conn.close()
-    return {"success": True, "message": "Payment verified and subscription activated instantly!"}
+
+    return {
+        "success": True,
+        "message": "Payment signature verified successfully!",
+        "order_id": order_id,
+        "payment_id": payment_id
+    }
 
 
 @app.post("/api/register-tenant")
@@ -450,6 +557,14 @@ def register_tenant(req: RegisterTenantReq):
     if req.mode == "razorpay":
         if not req.payment_id:
             raise HTTPException(status_code=400, detail="Razorpay payment verification is required to activate subscription directly.")
+        # If signature and order_id are provided, verify signature
+        if req.order_id and req.signature:
+            if not RAZORPAY_KEY_SECRET:
+                raise HTTPException(status_code=500, detail="RAZORPAY_KEY_SECRET is not configured on the server.")
+            message = f"{req.order_id}|{req.payment_id}".encode("utf-8")
+            gen_sig = hmac.new(RAZORPAY_KEY_SECRET.encode("utf-8"), message, hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(gen_sig, req.signature):
+                raise HTTPException(status_code=400, detail="Payment signature verification failed. Registration blocked.")
         status = "active"
         price_paid = price
         expiry = str(expiry_date)

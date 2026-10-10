@@ -223,9 +223,12 @@
         </header>
 
         <!-- Subscription Warning Banner -->
-        <div id="warningBanner" class="hidden bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 text-center text-amber-400 text-xs font-semibold flex items-center justify-center gap-2">
+        <div id="warningBanner" class="hidden bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 text-center text-amber-400 text-xs font-semibold flex items-center justify-center gap-3">
             <i data-lucide="alert-triangle" class="w-4 h-4"></i>
             <span id="warningMsg">warning: subscription expiring soon!</span>
+            <button onclick="renewSubscriptionViaRazorpay()" class="btn-tactile px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs shadow-sm transition">
+                Renew via Razorpay
+            </button>
         </div>
 
         <!-- OWNER SUPER-ADMIN DASHBOARD VIEW -->
@@ -1263,25 +1266,67 @@
             const formData = getRegisterFormData();
             if (!formData) return;
             const errEl = document.getElementById("regError");
+            if (errEl) errEl.classList.add("hidden");
+
+            const planPrices = {"6_months": 1200000, "1_year": 2000000, "lifetime": 5000000};
+            const amountInPaise = planPrices[formData.plan] || 2000000;
+
+            const btn = document.querySelector("button[onclick='payWithRazorpayAndRegister()']");
+            const originalHtml = btn ? btn.innerHTML : "";
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin inline mr-1"></i> preparing checkout...`;
+                if (window.lucide) lucide.createIcons();
+            }
 
             try {
-                const res = await fetch(`${API_BASE}/payment/create-order`, {
+                // STEP 1: Call backend create-order endpoint
+                const res = await fetch(`${API_BASE}/create-order`, {
                     method: "POST",
                     headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({plan_type: formData.plan})
+                    body: JSON.stringify({
+                        plan_type: formData.plan,
+                        amount: amountInPaise,
+                        currency: "INR",
+                        receipt: `rcpt_${Date.now()}`
+                    })
                 });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || "Failed to create Razorpay payment order.");
+                }
+
                 const orderData = await res.json();
 
+                // STEP 2: Open Razorpay modal with order_id
                 const options = {
                     key: orderData.key_id,
                     amount: orderData.amount,
                     currency: orderData.currency,
                     name: "esipfsolutions Enterprise",
-                    description: `Subscription Payment (${formData.plan})`,
+                    description: `Subscription Activation (${formData.plan.replace('_', ' ').toUpperCase()})`,
                     image: "https://esipfsolutions.in/favicon.ico",
                     order_id: orderData.order_id,
                     handler: async function (response) {
                         try {
+                            // STEP 3: Send razorpay_payment_id, razorpay_order_id, razorpay_signature to verify endpoint
+                            const verifyRes = await fetch(`${API_BASE}/verify-payment`, {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json"},
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature
+                                })
+                            });
+
+                            const verifyData = await verifyRes.json();
+                            if (!verifyRes.ok || !verifyData.success) {
+                                throw new Error(verifyData.detail || "Payment signature verification failed.");
+                            }
+
+                            // Complete tenant registration & direct instant activation
                             const regRes = await fetch(`${API_BASE}/register-tenant`, {
                                 method: "POST",
                                 headers: {"Content-Type": "application/json"},
@@ -1293,19 +1338,24 @@
                                     admin_password: formData.password,
                                     plan_type: formData.plan,
                                     mode: "razorpay",
-                                    payment_id: response.razorpay_payment_id || "pay_mock_verified",
-                                    order_id: response.razorpay_order_id || orderData.order_id
+                                    payment_id: response.razorpay_payment_id,
+                                    order_id: response.razorpay_order_id,
+                                    signature: response.razorpay_signature
                                 })
                             });
+
                             const regData = await regRes.json();
                             if (regRes.ok && regData.success) {
-                                alert(`Payment & Activation Successful!\n\nOrganization '${formData.org}' is now active under the ${formData.plan} plan. You can now log in.`);
+                                alert(`🎉 Payment Verified & Account Activated!\n\nOrganization '${formData.org}' is now fully active under the ${formData.plan} plan. You can now sign in.`);
                                 switchAuthTab('login');
+                                const loginUserInput = document.getElementById("loginUsername");
+                                if (loginUserInput) loginUserInput.value = formData.username;
                             } else {
                                 alert(regData.detail || "Registration failed after payment.");
                             }
-                        } catch (e) {
-                            alert("Error completing registration after payment.");
+                        } catch (verErr) {
+                            console.error("Verification error:", verErr);
+                            alert("Payment verification error: " + (verErr.message || "Failed to verify payment with server."));
                         }
                     },
                     prefill: {
@@ -1313,15 +1363,124 @@
                         email: formData.email,
                         contact: formData.phone
                     },
+                    modal: {
+                        ondismiss: function () {
+                            console.log("Razorpay checkout modal dismissed by user.");
+                            alert("Payment checkout was cancelled. You can retry anytime or choose 'Request Access from Owner'.");
+                        }
+                    },
                     theme: {
                         color: "#2563eb"
                     }
                 };
 
                 const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function (resp) {
+                    console.error("Razorpay Payment Failed:", resp.error);
+                    alert(`Payment Failed: ${resp.error.description || resp.error.reason || 'Transaction could not be completed.'}`);
+                });
                 rzp.open();
             } catch (err) {
-                alert("Opening Razorpay Payment Checkout Gateway...");
+                console.error("Razorpay order creation error:", err);
+                if (errEl) {
+                    errEl.innerText = err.message || "Could not launch Razorpay checkout.";
+                    errEl.classList.remove("hidden");
+                }
+                alert("Error starting Razorpay checkout: " + (err.message || "Please check connection."));
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    if (window.lucide) lucide.createIcons();
+                }
+            }
+        }
+
+        async function renewSubscriptionViaRazorpay() {
+            if (!currentUser || !currentUser.tenant_id) {
+                alert("Please log in to your tenant account to renew subscription.");
+                return;
+            }
+
+            const chosenPlan = prompt("Select Plan to Renew:\n1. '1_year' (₹20,000)\n2. '6_months' (₹12,000)\n3. 'lifetime' (₹50,000)", "1_year");
+            if (!chosenPlan) return;
+            const plan = chosenPlan.trim().toLowerCase();
+            const planPrices = {"6_months": 1200000, "1_year": 2000000, "lifetime": 5000000};
+            const amountInPaise = planPrices[plan] || 2000000;
+
+            try {
+                const res = await fetch(`${API_BASE}/create-order`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+                    body: JSON.stringify({
+                        plan_type: plan,
+                        amount: amountInPaise,
+                        currency: "INR",
+                        tenant_id: currentUser.tenant_id,
+                        receipt: `renew_${Date.now()}`
+                    })
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || "Failed to initialize renewal payment order.");
+                }
+                const orderData = await res.json();
+
+                const options = {
+                    key: orderData.key_id,
+                    amount: orderData.amount,
+                    currency: orderData.currency,
+                    name: "esipfsolutions Enterprise",
+                    description: `Subscription Renewal (${plan.toUpperCase()})`,
+                    image: "https://esipfsolutions.in/favicon.ico",
+                    order_id: orderData.order_id,
+                    handler: async function (response) {
+                        try {
+                            const verifyRes = await fetch(`${API_BASE}/verify-payment`, {
+                                method: "POST",
+                                headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    tenant_id: currentUser.tenant_id,
+                                    plan_type: plan
+                                })
+                            });
+
+                            const verifyData = await verifyRes.json();
+                            if (verifyRes.ok && verifyData.success) {
+                                alert("🎉 Subscription Successfully Renewed & Activated!\n\nYour account has been refreshed. Reloading dashboard...");
+                                window.location.reload();
+                            } else {
+                                alert(verifyData.detail || "Payment verification failed.");
+                            }
+                        } catch (e) {
+                            alert("Verification error: " + e.message);
+                        }
+                    },
+                    prefill: {
+                        name: currentUser.username,
+                        email: currentUser.email || ""
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            alert("Renewal checkout cancelled.");
+                        }
+                    },
+                    theme: {
+                        color: "#2563eb"
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function (resp) {
+                    alert(`Payment Failed: ${resp.error.description || 'Transaction declined.'}`);
+                });
+                rzp.open();
+            } catch (err) {
+                alert("Error launching Razorpay renewal: " + err.message);
             }
         }
 

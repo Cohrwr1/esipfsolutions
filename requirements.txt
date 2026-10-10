@@ -6,3 +6,6 @@ pyotp
 cryptography
 reportlab
 pandas
+razorpay
+python-dotenv
+requests
