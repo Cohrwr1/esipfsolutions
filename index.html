@@ -176,6 +176,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1">select subscription tier</label>
                     <select id="regPlan" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm">
+                        <option value="test_verify">Live Gateway Test Plan (₹1)</option>
                         <option value="6_months">6-Month Plan (₹12,000)</option>
                         <option value="1_year" selected>1-Year Plan (₹20,000)</option>
                         <option value="lifetime">Lifetime Unlimited License (₹50,000)</option>
@@ -1317,7 +1318,7 @@
             const errEl = document.getElementById("regError");
             if (errEl) errEl.classList.add("hidden");
 
-            const planPrices = {"6_months": 1200000, "1_year": 2000000, "lifetime": 5000000};
+            const planPrices = {"test_verify": 100, "6_months": 1200000, "1_year": 2000000, "lifetime": 5000000};
             const amountInPaise = planPrices[formData.plan] || 2000000;
 
             const btn = document.querySelector("button[onclick='payWithRazorpayAndRegister()']");
