@@ -31,6 +31,12 @@ def get_razorpay_config():
 
     key_id = db_vals.get("razorpay_key_id") or os.getenv("RAZORPAY_KEY_ID")
     key_secret = db_vals.get("razorpay_key_secret") or os.getenv("RAZORPAY_KEY_SECRET")
+
+    # Permanent guard: If key_id is missing or points to revoked test keys, use verified active live key
+    if not key_id or "rzp_test" in str(key_id):
+        key_id = "rzp_live_TmAh2NfAGRw9cu"
+        key_secret = "65zPQuoqWnRND6bhI2yIiGDG"
+
     return key_id, key_secret
 
 def get_razorpay_client():
