@@ -791,12 +791,22 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Google App Password (16 characters)</label>
-                    <input type="password" id="googleAppPasswordInput" placeholder="xxxx xxxx xxxx xxxx" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono" required>
-                    <p class="text-slate-500 text-[10px] mt-1.5">Get this from: Google Account &rarr; Security &rarr; 2-Step Verification &rarr; App passwords</p>
+                    <input type="password" id="googleAppPasswordInput" placeholder="xxxx xxxx xxxx xxxx" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
+                    <p class="text-slate-500 text-[10px] mt-1.5">Used for direct Google SMTP delivery on local/unblocked networks.</p>
                 </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" onclick="closeGoogleSettingsModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-700">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-500">Save Google Credentials</button>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Google Apps Script Web App URL (for Render Cloud)</label>
+                    <input type="url" id="googleScriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-3.5 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white text-xs font-mono">
+                    <p class="text-slate-500 text-[10px] mt-1.5">Bypasses Render Free SMTP port block over HTTPS (Port 443) and delivers emails directly from Google.</p>
+                </div>
+                <div class="flex items-center justify-between pt-2">
+                    <button type="button" onclick="sendTestEmail()" class="px-3.5 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl text-xs font-semibold hover:bg-amber-500/20 flex items-center gap-1.5">
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i> Test Email Dispatch
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeGoogleSettingsModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-semibold hover:bg-slate-700">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-500">Save Settings</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -1242,8 +1252,23 @@
             loadOwnerSummary();
         }
 
-        function openGoogleSettingsModal() {
+        async function openGoogleSettingsModal() {
             document.getElementById("googleSettingsModal").classList.remove("hidden");
+            try {
+                const res = await fetch(`${API_BASE}/owner/settings`, {
+                    headers: {"Authorization": `Bearer ${authToken}`}
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.gmail_user && document.getElementById("googleSenderEmail")) {
+                        document.getElementById("googleSenderEmail").value = data.gmail_user;
+                    }
+                    if (data.script_url && document.getElementById("googleScriptUrlInput")) {
+                        document.getElementById("googleScriptUrlInput").value = data.script_url;
+                    }
+                }
+            } catch (err) {}
+            if (window.lucide) lucide.createIcons();
         }
 
         function closeGoogleSettingsModal() {
@@ -1252,16 +1277,37 @@
 
         async function handleSaveGoogleSettings(e) {
             e.preventDefault();
-            const pwd = document.getElementById("googleAppPasswordInput").value;
-            const email = document.getElementById("googleSenderEmail").value;
+            const pwd = document.getElementById("googleAppPasswordInput").value.trim();
+            const email = document.getElementById("googleSenderEmail").value.trim();
+            const scriptUrl = document.getElementById("googleScriptUrlInput") ? document.getElementById("googleScriptUrlInput").value.trim() : "";
             const res = await fetch(`${API_BASE}/owner/settings`, {
                 method: "POST",
                 headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
-                body: JSON.stringify({gmail_app_password: pwd, gmail_user: email})
+                body: JSON.stringify({gmail_app_password: pwd, gmail_user: email, google_script_url: scriptUrl})
             });
             const data = await res.json();
-            alert(data.message || "Google settings saved!");
+            alert(data.message || "Google settings saved successfully!");
             closeGoogleSettingsModal();
+        }
+
+        async function sendTestEmail() {
+            const email = prompt("Enter email address to send test 2FA code to:", "gulatihriday.003@gmail.com");
+            if (!email) return;
+            try {
+                const res = await fetch(`${API_BASE}/owner/test-email`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json", "Authorization": `Bearer ${authToken}`},
+                    body: JSON.stringify({email: email.trim()})
+                });
+                const data = await res.json();
+                if (data.sent) {
+                    alert("Test email dispatched successfully! Please check the inbox: " + email);
+                } else {
+                    alert("Dispatch result: " + (data.reason || data.message || "Failed. Please ensure Google Script URL or App Password is saved."));
+                }
+            } catch (err) {
+                alert("Error sending test email: " + err.message);
+            }
         }
 
         // OWNER EDIT & UNDO MODAL HANDLERS

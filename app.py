@@ -480,6 +480,7 @@ def register_tenant(req: RegisterTenantReq):
 class OwnerSettingsReq(BaseModel):
     gmail_app_password: Optional[str] = None
     gmail_user: Optional[str] = None
+    google_script_url: Optional[str] = None
 
 @app.post("/api/owner/approve-request")
 def approve_request(req: OwnerActionReq, current_user: dict = Depends(get_current_user)):
@@ -503,9 +504,33 @@ def update_owner_settings(req: OwnerSettingsReq, current_user: dict = Depends(ge
         cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('gmail_app_password', ?)", (req.gmail_app_password.strip(),))
     if req.gmail_user is not None:
         cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('gmail_user', ?)", (req.gmail_user.strip(),))
+    if req.google_script_url is not None:
+        cursor.execute("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('google_script_url', ?)", (req.google_script_url.strip(),))
     conn.commit()
     conn.close()
     return {"success": True, "message": "Settings updated successfully."}
+
+@app.get("/api/owner/settings")
+def get_owner_settings(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "owner":
+        raise HTTPException(status_code=403, detail="Owner privileges required.")
+    from security import get_email_settings
+    settings = get_email_settings()
+    return {
+        "gmail_user": settings["email_user"],
+        "has_app_pwd": bool(settings["app_pwd"]),
+        "has_script_url": bool(settings["script_url"]),
+        "script_url": settings["script_url"],
+        "has_resend_key": bool(settings["resend_key"])
+    }
+
+@app.post("/api/owner/test-email")
+def test_email_endpoint(req: dict, current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "owner":
+        raise HTTPException(status_code=403, detail="Owner privileges required.")
+    to_email = req.get("email", current_user.get("email", "gulatihriday.003@gmail.com"))
+    res = send_google_email_otp(to_email, "777888", "test_user")
+    return res
 
 # --- 2. Owner Super Admin API (Edit / Undo / Controls) ---
 
